@@ -4,5 +4,35 @@
   "description": "Main app for lms.labchecker.ru project",
   "main": "index.js",
   "author": "Dmitry Vasiliev",
-  "license": "MIT"
+  "contributors": [
+    {
+      "name": "Dmitry Vasiliev",
+      "email": "vasiliev.dim2014@gmail.com",
+      "url": "http://www.linkedin.com/in/dmitry-vasiliev"
+    },
+    {
+      "name": "Andrey Yuldashev",
+      "email": "izzvms@gmail.com",
+      "url": ""
+    }
+  ],
+  "scripts": {
+    "test": "none",
+    "start-dev": "nodemon --config \"./util/nodemon.json\"/",
+    "build": "rm -rf ./build/* && tsc --build tsconfig.json",
+    "start": "node build/index.js"
+  },
+  "dependencies": {
+    "@overnightjs/core": "^1.7.4",
+    "@overnightjs/logger": "^1.1.12",
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.7",
+    "@types/node": "^14.0.22",
+    "nodemon": "^2.0.4",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.6"
+  }
 }
