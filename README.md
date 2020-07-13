@@ -14,3 +14,5 @@ There are some created scripts in `package.json`:
 * `build` - compile back-end and move result to `build` directory.
 * `start` - run production server.
 * `test` - run all tests in `tests` directories.
+* `watch` - run webpack with watch mode.
+* `lint` - run eslint.
