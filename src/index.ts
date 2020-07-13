@@ -4,6 +4,8 @@ import * as exphbs from "express-handlebars";
 
 const app = express();
 
+app.use("/static", express.static("src/public"));
+
 app.set('views', path.join(__dirname, '/views'));
 app.engine('handlebars', exphbs());
 app.set('view engine', 'handlebars');

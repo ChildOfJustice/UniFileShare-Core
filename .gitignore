@@ -359,3 +359,4 @@ dist
 .yarn/build-state.yml
 .pnp.*
 
+/src/public/
