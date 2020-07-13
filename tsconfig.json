@@ -12,7 +12,8 @@
     "importHelpers": true,
     "jsx": "react",
     "types": [
-      "node"
+      "node",
+      "jest"
     ],
     "typeRoots": [
       "node_modules/@types"
