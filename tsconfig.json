@@ -10,6 +10,7 @@
     "emitDecoratorMetadata": true,
     "moduleResolution": "node",
     "importHelpers": true,
+    "jsx": "react",
     "types": [
       "node"
     ],
