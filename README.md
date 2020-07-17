@@ -11,7 +11,7 @@ $ npm install
 ## How to use?
 There are some created scripts in `package.json`:
 * `start-dev` - run development server with `nodemon`.
-* `build` - compile back-end and move result to `build` directory.
+* `build` - compile back-end and front-end after that save compiled back-end to `build` directory.
 * `start` - run production server.
 * `test` - run all tests in `tests` directories.
 * `watch` - run webpack with watch mode.
