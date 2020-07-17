@@ -19,7 +19,7 @@
   "scripts": {
     "test": "jest",
     "start-dev": "nodemon --config \"./util/nodemon.json\"/",
-    "build": "rm -rf ./build/* && tsc --build tsconfig.json",
+    "build": "rm -rf ./build/* && tsc --build tsconfig.json && webpack --config src/webpack.config.js",
     "start": "node build/index.js",
     "lint": "eslint . --ext \"tsx,ts\"",
     "watch": "webpack --config src/webpack.config.js --watch"
