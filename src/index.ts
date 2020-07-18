@@ -28,7 +28,7 @@ app.use(serveFavicon(path.join(process.cwd(), '/src', '/public', 'favicon.ico'))
 const PORT = process.env.PORT || 3000;
 
 app.use("/", (req, res) => {
-    res.render("index", { layout: false });
+    res.render("index");
 });
 
 app.listen(PORT, () => {
