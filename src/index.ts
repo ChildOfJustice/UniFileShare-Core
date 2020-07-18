@@ -1,14 +1,20 @@
 import * as express from "express";
 import * as path from "path";
 import * as exphbs from "express-handlebars";
+import * as compression from "compression";
 
 const app = express();
 
+// set static path
 app.use("/static", express.static("src/public"));
 
+// set template engine
 app.set('views', path.join(process.cwd(), '/src', '/views'));
 app.engine('handlebars', exphbs());
 app.set('view engine', 'handlebars');
+
+// set response compression
+app.use(compression());
 
 const PORT = process.env.PORT || 3000;
 
