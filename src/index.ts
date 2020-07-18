@@ -3,6 +3,7 @@ import * as path from "path";
 import * as exphbs from "express-handlebars";
 import * as compression from "compression";
 import * as morgan from "morgan";
+import * as bodyParser from "body-parser";
 
 const app = express();
 
@@ -18,6 +19,8 @@ app.set('view engine', 'handlebars');
 app.use(compression());
 // set logger
 app.use(morgan("common"));
+// serve json requests
+app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 3000;
 
