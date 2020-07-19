@@ -7,10 +7,7 @@ import * as bodyParser from "body-parser";
 import * as serveFavicon from "serve-favicon";
 import { Sequelize } from "sequelize";
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import * as config from "../util/config.js";
-
+import config from "../util/config";
 const app = express();
 
 // set static path

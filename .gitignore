@@ -370,4 +370,4 @@ dist
 !/src/public/android-chrome-192x192.png
 !/src/public/mstile-150x150.png
 
-/util/config.js
+/util/config.ts
