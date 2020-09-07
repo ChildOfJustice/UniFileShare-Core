@@ -1,7 +1,7 @@
 import * as express from "express";
 import * as testDB from "../controllers/test.controller"
 
-function func(app:any) {
+export default async (app:any) => {
     const router = express.Router();
 
     // Create a new note
@@ -28,4 +28,4 @@ function func(app:any) {
     app.use('/api/testdb', router);
 }
 
-export default func
+//export default func

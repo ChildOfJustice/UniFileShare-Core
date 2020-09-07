@@ -15,7 +15,7 @@ const app = express();
 
 // set static path
 app.use("/static", express.static("src/public"));
-app.use(cors())
+//app.use(cors())
 
 // set template engine
 app.set('views', path.join(process.cwd(), '/src', '/views'));
@@ -35,50 +35,24 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3001;
 
-// app.use("/", (req, res) => {
-//     res.render("index");
-// });
-
-app.post('/', function(request, response) {
-
-    // console.log(request.body); // your JSON
-    // const responseParams = {
-    //     id: 83837,
-    //     code: 9
-    // };
-    // response.send(JSON.stringify(responseParams));
-
-    try {
-        if (request.body.userName == "Sardor" && request.body.password == "root") {
-            const responseParams = {
-                id: 83837,
-                code: 9
-            };
-            response.send(JSON.stringify(responseParams));
-        } else {
-            response.send(request.body); // echo the result back
-        }
-    } catch (e) {
-        response.send("ERROR");
-    }
-
+app.use("/", (req, res) => {
+    res.render("index");
 });
 
-
 app.listen(PORT, async () => {
-    try {
-        await db.sequelizeEntity.authenticate();
-        console.log('Connection has been established successfully.');
-        //db.sequelizeEntity.sync();
-        //for development:
-        db.sequelizeEntity.sync({ force: true }).then(() => {
-            console.log("Drop and re-sync db.");
-        });
-        //^
-        routes(app);
-    } catch (error) {
-        console.error('Unable to connect to the database:', error);
-    }
+    // try {
+    //     await db.sequelizeEntity.authenticate();
+    //     console.log('Connection has been established successfully.');
+    //     //db.sequelizeEntity.sync();
+    //     //for development:
+    //     db.sequelizeEntity.sync({ force: true }).then(() => {
+    //         console.log("Drop and re-sync db.");
+    //     });
+    //     //^
+    //     routes(app);
+    // } catch (error) {
+    //     console.error('Unable to connect to the database: ', error);
+    // }
 
     console.log(`Server started on http://localhost:${PORT}.`);
 });
