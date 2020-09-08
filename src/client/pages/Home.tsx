@@ -13,8 +13,14 @@ export default () => {
                 extra attention to featured content or information.
             </p>
             <p>
-                <LinkContainer to="/login">
+                <LinkContainer to="/signIn">
                     <Button variant="primary">Sign In</Button>
+                </LinkContainer>
+                <LinkContainer to="/signUp">
+                    <Button variant="primary">Sign Up</Button>
+                </LinkContainer>
+                <LinkContainer to="/test">
+                    <Button variant="primary">Test</Button>
                 </LinkContainer>
             </p>
         </Jumbotron>
