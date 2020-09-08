@@ -6,13 +6,15 @@ import * as bodyParser from "body-parser";
 import AuthController from "./controllers/auth.controller";
 import HomeController from './controllers/home.controller';
 import ProtectedController from "./controllers/protected.controller";
+import DatabaseController from "./controllers/database.controller";
 
 const app = new App({
     port: config.server.port,
     controllers: [
         new ProtectedController(),
         new HomeController(),
-        new AuthController()
+        new AuthController(),
+        new DatabaseController()
     ],
     middleWares: [
         bodyParser.json(),

@@ -9,10 +9,15 @@ const init: IDemoState = {
 export function demoReducer(state: IDemoState = init, action: DemoActions): IDemoState {
   switch (action.type) {
     case Constants.LOAD_STORE:
-      const loadedState = JSON.parse(localStorage.getItem('store') || '') as IDemoState
-      state.idToken = loadedState.idToken
-      state.authToken = loadedState.authToken
-      state.loading = loadedState.loading
+      const loadedState = localStorage.getItem('store')
+      if (!loadedState){
+        return {...state};
+      }
+
+      const loadedStateJSON = JSON.parse(loadedState) as IDemoState
+      state.idToken = loadedStateJSON.idToken
+      state.authToken = loadedStateJSON.authToken
+      state.loading = loadedStateJSON.loading
       return {...state};
     case Constants.SAVE_STORE:
       localStorage.removeItem('store')

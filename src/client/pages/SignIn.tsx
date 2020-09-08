@@ -55,7 +55,7 @@ class SignIn extends React.Component<ReduxType, IState> {
 
     componentDidMount() {
         alert("ONLOAD!!")
-        this.props.loadStore()
+        //this.props.loadStore()
     }
 
     signIn = (event: any) => {
@@ -126,6 +126,65 @@ class SignIn extends React.Component<ReduxType, IState> {
         //     .catch(error => alert("Fetch error: " + error))
     }
 
+    sendNodeToDB = (event: any) => {
+        event.preventDefault()
+
+        const usrParams = {
+            title: "TEST",
+            username: "TEST_USER",
+            someReal: 83.7,
+            signUpDate: ontimeupdate
+        }
+
+
+        fetch('/db/create',{
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: JSON.stringify(usrParams)
+        })
+            .then(res => {
+                console.log(res)
+                let response_ = res.json()
+                console.log(response_)
+
+                if(res.ok)
+                    alert("Successfully get the response from db")
+                else alert("Error, see logs for more info")
+            })
+            .catch(error => alert("Fetch error: " + error))
+    }
+
+    getAllNodesFromDB = (event: any) => {
+        event.preventDefault()
+
+        const usrParams = {
+            username: "TEST_USER"
+        }
+
+
+        fetch('/db/findAll?username=TEST_USER',{
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        })
+            .then(res => {
+                console.log(res)
+                res.json().then(jsonRes => {
+                    console.log(jsonRes)
+                })
+
+                if(res.ok)
+                    alert("Successfully get all nodes from db")
+                else alert("Error, see logs for more info")
+            })
+            .catch(error => alert("Fetch error: " + error))
+    }
+
     makeRequest = (event: any) => {
         event.preventDefault()
         
@@ -172,6 +231,8 @@ class SignIn extends React.Component<ReduxType, IState> {
                 <div style={{margin: '20px'}}>
                     <button onClick={this.uploadFile}>Upload File</button>
                     <button onClick={this.makeRequest}>Make a request</button>
+                    <button onClick={this.sendNodeToDB}>Send test node to DB</button>
+                    <button onClick={this.getAllNodesFromDB}>Get all nodes from DB</button>
                     {loading && <div>Loading...</div>}
                     <ul>
                         your auth token is: {authToken}
