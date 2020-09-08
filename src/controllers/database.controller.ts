@@ -5,12 +5,13 @@ import AuthMiddleWare from '../middleware/auth.middleware'
 
 import db from "../models"
 
+const Test = db.testDB;
+const Op = db.SequelizeService.Op;
+
 class DatabaseController {
     public path = '/db'
     public router = express.Router()
     //private authMiddleWare: AuthMiddleWare
-    private Test = db.testDB;
-    private Op = db.SequelizeService.Op;
 
     constructor() {
         //this.authMiddleWare = new AuthMiddleWare()
@@ -20,7 +21,7 @@ class DatabaseController {
 
     private initRoutes(){
         //this.router.use(this.authMiddleWare.verifyToken)
-        this.router.get('/db-homepage', this.home)
+        this.router.get('/homepage', this.home)
 
         // Create a new note
         this.router.post("/create", this.create);
@@ -69,10 +70,11 @@ class DatabaseController {
             signUpDate: req.body.signUpDate
         };
 
+
         // Save Tutorial in the database
-        this.Test.create(note)
+        Test.create(note)
             .then((data: never) => {
-                res.send(JSON.stringify(data));
+                //res.send(JSON.stringify(data));
                 console.log("CREATED NEW USER: " + data)
                 res.send(data);
             })
@@ -89,11 +91,11 @@ class DatabaseController {
         const username = req.query.username;
         const condition = username ? {
             username: {
-                [this.Op.iLike]: `%${username}%`
+                [Op.iLike]: `%${username}%`
             }
         } : null;
 
-        this.Test.findAll({ where: condition })
+        Test.findAll({ where: condition })
             .then((data: any) => {
                 console.log("data: " + data)
                 res.send(data);

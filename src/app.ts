@@ -6,6 +6,7 @@ import * as compression from "compression";
 import * as morgan from "morgan";
 import * as bodyParser from "body-parser";
 import * as serveFavicon from "serve-favicon";
+import * as cors from "cors"
 
 import db from "./models"
 
@@ -15,6 +16,11 @@ class App {
 
     constructor(appInit: { port: number; controllers: any; middleWares: any }) {
         this.app = express()
+
+        this.app.use((req, res, next) => {
+            res.header('Access-Control-Allow-Origin', '*')
+            next()
+        })
 
         // set static path
         this.app.use("/static", express.static("src/public"));
@@ -27,6 +33,7 @@ class App {
         // serve favicon
         this.app.use(serveFavicon(path.join(process.cwd(), '/src', '/public', 'favicon.ico')))
 
+        this.app.use(cors())
         // this.app.use(express.json());
 
         // set template engine
