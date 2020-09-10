@@ -7,10 +7,12 @@ import * as React from "react";
 export default () => {
     return (
         <Jumbotron>
-            <h1>Hello!</h1>
+            <h1>Welcome!</h1>
             <p>
-                This is a simple hero unit, a simple jumbotron-style component for calling
-                extra attention to featured content or information.
+                This is Universal File Share System.
+            </p>
+            <p>
+                Feel free to test your service! ;p
             </p>
             <p>
                 <LinkContainer to="/signIn">
@@ -18,6 +20,9 @@ export default () => {
                 </LinkContainer>
                 <LinkContainer to="/signUp">
                     <Button variant="primary">Sign Up</Button>
+                </LinkContainer>
+                <LinkContainer to="/uploadFile">
+                    <Button variant="primary">Upload a file to cloud</Button>
                 </LinkContainer>
                 <LinkContainer to="/test">
                     <Button variant="primary">Test</Button>

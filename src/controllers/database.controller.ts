@@ -2,10 +2,11 @@ import * as express from 'express';
 import { Request, Response} from "express";
 import AuthMiddleWare from '../middleware/auth.middleware'
 
+import { MetadataNode } from '../interfaces/metadataNode'
 
 import db from "../models"
 
-const Test = db.testDB;
+const MetadataDB = db.metadataDB;
 const Op = db.SequelizeService.Op;
 
 class DatabaseController {
@@ -63,24 +64,31 @@ class DatabaseController {
             return;
         }
 
+
         // Create a note
-        const note = {
-            username: req.body.username,
-            someReal: req.body.someReal,
-            signUpDate: req.body.signUpDate
+        const note: MetadataNode = {
+            // username: req.body.username,
+            // someReal: req.body.someReal,
+            // signUpDate: req.body.signUpDate
+            title: req.title,
+            ownedBy: req.body.ownedBy,
+            uploadedBy: req.body.uploadedBy,
+            sizeOfFile_MB: req.body.sizeOfFile_MB,
+            tagsKeys: req.body.tagsKeys,
+            tagsValues: req.body.tagsValues,
         };
 
 
         // Save Tutorial in the database
-        Test.create(note)
+        MetadataDB.create(note)
             .then((data: never) => {
                 //res.send(JSON.stringify(data));
-                console.log("CREATED NEW USER: " + data)
+                console.log("CREATED NEW note: " + data)
                 res.send(data);
             })
             .catch((err: { message: string; }) => {
                 res.status(500).send({
-                    message: err.message || "Some error occurred while creating the Tutorial."
+                    message: err.message || "Some error occurred while creating the note."
                 });
             });
     }
@@ -88,14 +96,14 @@ class DatabaseController {
     // Retrieve all notes from the database.
     //We use req.query.title to get query string from the Request and consider it as condition for findAll() method.
     findAll (req:any, res:any){
-        const username = req.query.username;
-        const condition = username ? {
+        const ownedBy = req.query.ownedBy;
+        const condition = ownedBy ? {
             username: {
-                [Op.iLike]: `%${username}%`
+                [Op.iLike]: `%${ownedBy}%`
             }
         } : null;
 
-        Test.findAll({ where: condition })
+        MetadataDB.findAll({ where: condition })
             .then((data: any) => {
                 console.log("data: " + data)
                 res.send(data);

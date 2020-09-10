@@ -39,11 +39,6 @@ export default class SignUp extends React.Component<IProps, IState> {
     signUp = (event: any) => {
         event.preventDefault()
 
-        // this.props.setKey("TEST up key");
-        // alert("!!!->" + this.props.authKey)
-
-        //console.log("SIGN UP REQUEST: ")
-        //const {username, password, email} = this.state
         alert(this.userName + " " + this.password + " " + this.email + " test state: " + this.state.smth)
 
 
@@ -51,9 +46,6 @@ export default class SignUp extends React.Component<IProps, IState> {
             username: this.userName,
             password: this.password,
             email: this.email,
-            // name: "TestName",
-            // family_name: "TestFamilyName",
-            // birthdate: "1980-10-29"
         }
 
         fetch('/auth/signUp',{
@@ -93,14 +85,15 @@ export default class SignUp extends React.Component<IProps, IState> {
                     <Form.Label>Email address</Form.Label>
                     <Form.Control onChange={this._onChangeEmail} type="email" placeholder="Enter email" />
                 </Form.Group>
-                <Form.Group controlId="formBasicPassword">
-                    <Form.Label>Password</Form.Label>
-                    <Form.Control onChange={this._onChangePassword} type="password" placeholder="Password" />
-                </Form.Group>
                 <Form.Group controlId="formBasicUserName">
                     <Form.Label>UserName</Form.Label>
                     <Form.Control onChange={this._onChangeUserName} type="string" placeholder="Your username" />
                 </Form.Group>
+                <Form.Group controlId="formBasicPassword">
+                    <Form.Label>Password</Form.Label>
+                    <Form.Control onChange={this._onChangePassword} type="password" placeholder="Password" />
+                </Form.Group>
+
                 <Button onClick={this.signUp} variant="primary" type="submit">Sign Up</Button>
             </Form>
         );

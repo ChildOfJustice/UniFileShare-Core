@@ -25,7 +25,6 @@ const mapDispatcherToProps = (dispatch: Dispatch<DemoActions>) => {
         setIdToken: (token: string) => tokensService.setIdToken(dispatch, token),
         loadStore: () => storeService.loadStore(dispatch),
         saveStore: () => storeService.saveStore(dispatch),
-        //addItem: (item: string) => asyncactions.addItemAsync(dispatch, item)
     }
 }
 
@@ -46,16 +45,12 @@ class SignIn extends React.Component<ReduxType, IState> {
 
     constructor(props: ReduxType) {
         super(props);
-        // window.onload = () => {
-        //     alert("ONLOAD!!")
-        //     this.props.loadStore()
-        // }
 
     }
 
     componentDidMount() {
-        alert("ONLOAD!!")
-        //this.props.loadStore()
+        //alert("ONLOAD!!")
+        this.props.loadStore()
     }
 
     signIn = (event: any) => {
@@ -102,67 +97,8 @@ class SignIn extends React.Component<ReduxType, IState> {
         //browserHistory.push('/home');
     }
 
-    uploadFile = (event: any) => {
-        event.preventDefault()
-        window.open('/upload-file')
-        // fetch('/upload-file',{
-        //     method: 'GET',
-        //     headers: {
-        //         'Content-Type': 'application/json',
-        //         //'Auth': authToken,
-        //         //'Identity': idToken
-        //         // 'Content-Type': 'application/x-www-form-urlencoded',
-        //     }
-        // })
-        //     .then(res => {
-        //         console.log(res)
-        //         // let response_ = res.json()
-        //         // console.log(response_)
-        //
-        //         if(res.ok)
-        //             alert("Successfully get the page")
-        //         else alert("Error, see logs for more info")
-        //     })
-        //     .catch(error => alert("Fetch error: " + error))
-    }
-
-    sendNodeToDB = (event: any) => {
-        event.preventDefault()
-
-        const usrParams = {
-            title: "TEST",
-            username: "TEST_USER",
-            someReal: 83.7,
-            signUpDate: ontimeupdate
-        }
-
-
-        fetch('/db/create',{
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-                // 'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: JSON.stringify(usrParams)
-        })
-            .then(res => {
-                console.log(res)
-                let response_ = res.json()
-                console.log(response_)
-
-                if(res.ok)
-                    alert("Successfully get the response from db")
-                else alert("Error, see logs for more info")
-            })
-            .catch(error => alert("Fetch error: " + error))
-    }
-
     getAllNodesFromDB = (event: any) => {
         event.preventDefault()
-
-        const usrParams = {
-            username: "TEST_USER"
-        }
 
 
         fetch('/db/findAll?username=TEST_USER',{
@@ -214,7 +150,6 @@ class SignIn extends React.Component<ReduxType, IState> {
     }
 
     _onChangeUserName = (e: React.ChangeEvent<HTMLInputElement>) => {
-        //this.userName = (e.target as HTMLInputElement).value
         this.setState({username: (e.target as HTMLInputElement).value})
     }
 
@@ -229,23 +164,24 @@ class SignIn extends React.Component<ReduxType, IState> {
         const signInPage = (
             <Form>
                 <div style={{margin: '20px'}}>
-                    <button onClick={this.uploadFile}>Upload File</button>
-                    <button onClick={this.makeRequest}>Make a request</button>
-                    <button onClick={this.sendNodeToDB}>Send test node to DB</button>
-                    <button onClick={this.getAllNodesFromDB}>Get all nodes from DB</button>
+                    <button onClick={this.makeRequest}>Make a request to secret page</button>
+                    <button onClick={this.getAllNodesFromDB}>Get all notes from DB</button>
                     {loading && <div>Loading...</div>}
                     <ul>
-                        your auth token is: {authToken}
+                        your auth token is: "{authToken}"
                     </ul>
                 </div>
-                <Form.Group controlId="formBasicPassword">
-                    <Form.Label>Password</Form.Label>
-                    <Form.Control onChange={this._onChangePassword} type="password" placeholder="Password" />
-                </Form.Group>
+
+
                 <Form.Group controlId="formBasicUserName">
                     <Form.Label>UserName</Form.Label>
                     <Form.Control onChange={this._onChangeUserName} type="string" placeholder="Your username" />
                 </Form.Group>
+                <Form.Group controlId="formBasicPassword">
+                    <Form.Label>Password</Form.Label>
+                    <Form.Control onChange={this._onChangePassword} type="password" placeholder="Password" />
+                </Form.Group>
+
                 <Button onClick={this.signIn} variant="primary" type="submit">Sign In</Button>
             </Form>
         )

@@ -13,13 +13,13 @@ const sequelize = new Sequelize(config.db.name, config.db.username, config.db.pa
 interface DataBase{
     SequelizeService: any
     sequelizeEntity: any
-    testDB: any
+    metadataDB: any
 }
 
 const db : DataBase = {
     SequelizeService: Sequelize,
     sequelizeEntity: sequelize,
-    testDB: models(sequelize, Sequelize)
+    metadataDB: models(sequelize, Sequelize)
 }
 
 export default db

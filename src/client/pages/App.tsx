@@ -10,8 +10,6 @@ import SignUp from "./SignUp";
 import Home from "./Home"
 import Test from "./Test"
 
-import store from "../../store";
-import {Provider} from "react-redux";
 import UploadFile from "./UploadFile";
 
 class App extends React.Component {
@@ -27,10 +25,7 @@ class App extends React.Component {
                 <Container className="p-3">
                     <Switch>
                         <Route exact path='/' component={Home}/>
-                        <Route exact path='/uploadFile' component={UploadFile}/>
-
-                        {/*<Route path='/reduxTest' component={App2}/>*/}
-
+                        <Route path='/uploadFile' component={UploadFile}/>
                         <Route path='/signIn' component={SignIn} />
                         <Route path='/signUp' component={SignUp}/>
                         <Route path='/test' component={Test}/>

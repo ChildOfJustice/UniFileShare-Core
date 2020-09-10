@@ -13,11 +13,7 @@ export default class Test extends React.Component {
     }
     // Fetch the text on first mount
     componentDidMount() {
-
         this.getText();
-        // @ts-ignore
-        const { msg } = this.state;
-        console.log("!!!_>" + msg)
     }
     // Retrieves the list of items from the Express app
     getText = () => {
@@ -31,7 +27,7 @@ export default class Test extends React.Component {
         const { msg } = this.state;
         return (
             <div>
-                FUCK THIS
+                Test message from server:
                 {msg}
             </div>
         );
