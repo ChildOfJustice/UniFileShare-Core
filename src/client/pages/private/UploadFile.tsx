@@ -4,9 +4,10 @@ import Button from "react-bootstrap/Button";
 import * as React from "react";
 import * as AWS from "aws-sdk"
 import * as CryptoJS from "crypto-js"
-import {MetadataNode} from "../../interfaces/metadataNode";
+import {FileMetadata} from "../../../interfaces/databaseTables";
+import { v4 as uuidv4 } from 'uuid'
 
-import config from "../../../util/config";
+import config from "../../../../util/config";
 
 ///CONFIG
 //AZURE:
@@ -22,96 +23,6 @@ export default class UploadFile extends React.Component {
     tagIndex = 1;
 
 
-    downloadFile = (fileName:string, cloud:string) => {
-        if (cloud == 'AWS'){
-
-            AWS.config.update({
-                region: config.AWS.S3.bucketRegion,
-                credentials: new AWS.CognitoIdentityCredentials({
-                    IdentityPoolId: config.AWS.IdentityPool.IdentityPoolId
-                })
-            });
-
-            var s3 = new AWS.S3({
-                apiVersion: '2006-03-01',
-                params: {Bucket: config.AWS.S3.bucketName}
-            });
-
-            var promise = s3.getSignedUrlPromise('getObject', {
-                Bucket: config.AWS.S3.bucketName,
-                Key: fileName
-            });
-            promise.then(function(url) {
-                window.open( url, '_blank' );
-                console.log('The URL is', url);
-            }, function(err) { alert("error") });
-
-
-        }
-
-        // if(cloud == 'Azure'){
-        //
-        //     var url = "https://"+storageAccount+".blob.core.windows.net/"+storageName+"/" + fileName;
-        //     var now = (new Date()).toUTCString();
-        //
-        //     var method = "GET";
-        //     var headerResource = "x-ms-date:"+ now + "\nx-ms-version:2019-07-07";
-        //     var canonicalizedResource = "/" + storageAccount + "/"+storageName+"/"+fileName;
-        //     var contentEncoding = "";
-        //     var contentLanguage = "";
-        //     var contentLength = "";
-        //     var contentMd5 = "";
-        //     var contentType = "";
-        //     var date = "";
-        //     var ifModifiedSince = "";
-        //     var ifMatch = "";
-        //     var ifNoneMatch = "";
-        //     var ifUnmodifiedSince = "";
-        //     var range = "";
-        //     var stringToSign = method + "\n" + contentEncoding + "\n" + contentLanguage + "\n" + contentLength + "\n" + contentMd5 + "\n" + contentType + "\n" + date + "\n" + ifModifiedSince + "\n" + ifMatch + "\n" + ifNoneMatch + "\n" + ifUnmodifiedSince + "\n" + range + "\n" + headerResource + "\n" + canonicalizedResource;
-        //
-        //     console.log("StringToSign: " + stringToSign);
-        //
-        //     var secret = CryptoJS.enc.Base64.parse(storageKey);
-        //     var hash = CryptoJS.HmacSHA256(stringToSign, secret);
-        //     var hashInBase64 = CryptoJS.enc.Base64.stringify(hash);
-        //     var signature = hashInBase64;
-        //
-        //
-        //     var AuthorizationHeader = "SharedKey " + storageAccount + ":" + signature;
-        //
-        //
-        //     var xhttp = new XMLHttpRequest();
-        //
-        //     xhttp.addEventListener('load', function() {
-        //         console.log(this.statusText);
-        //         if(this.statusText == "OK"){
-        //             const urlBlob = window.URL.createObjectURL(this.response);
-        //             const a = document.createElement('a');
-        //             a.style.display = 'none';
-        //             a.href = urlBlob;
-        //             a.download = fileName;
-        //             document.body.appendChild(a);
-        //             a.click();
-        //             window.URL.revokeObjectURL(urlBlob);
-        //             a.remove();
-        //         } else {
-        //             alert(this.statusText);
-        //         }
-        //     });
-        //     xhttp.addEventListener('error', () => console.log("Request to "+url+" failed"));
-        //
-        //     xhttp.open("GET", url, true);
-        //     xhttp.responseType = 'blob';
-        //     xhttp.setRequestHeader("Cache-Control", "no-cache, must-revalidate, no-store");
-        //     xhttp.setRequestHeader("Authorization", AuthorizationHeader);
-        //     xhttp.setRequestHeader("x-ms-date", now);
-        //     xhttp.setRequestHeader("x-ms-version", "2019-07-07");
-        //     xhttp.send();
-        //
-        // }
-
-    }
 
     uploadFile = () => {
         var cloudCombobox = document.getElementById("cloudCombobox");
@@ -192,11 +103,11 @@ export default class UploadFile extends React.Component {
 
 
             //SEND Metadata TO DB
-            const metadata: MetadataNode = {
-                // username: req.body.username,
-                // someReal: req.body.someReal,
-                // signUpDate: req.body.signUpDate
-                title: "TEST_METADATA",
+            const metadata: FileMetadata = {
+                name: file.name,
+                //TODO
+                S3uniqueName: "CLUSTER_NAME/" + uuidv4(),
+                cloud: "AWS",
                 ownedBy: defaultTagValue1,
                 uploadedBy: defaultTagValue2,
                 sizeOfFile_MB: file.size / 1024 / 1024,
