@@ -2,7 +2,7 @@ import * as express from 'express';
 import { Request, Response} from "express";
 import AuthMiddleWare from '../middleware/auth.middleware'
 
-import { MetadataNode } from '../interfaces/metadataNode'
+import { FileMetadata } from '../interfaces/databaseTables'
 
 import db from "../models"
 
@@ -57,20 +57,17 @@ class DatabaseController {
     create (req:any, res:any) {
 
         // Validate request
-        if (!req.body.title) {
-            res.status(400).send({
-                message: "Content can not be empty!"
-            });
-            return;
-        }
+        //^
 
 
         // Create a note
-        const note: MetadataNode = {
+        const note: FileMetadata = {
             // username: req.body.username,
             // someReal: req.body.someReal,
             // signUpDate: req.body.signUpDate
-            title: req.title,
+            name: req.body.name,
+            S3uniqueName: req.body.S3uniqueName,
+            cloud: req.body.cloud,
             ownedBy: req.body.ownedBy,
             uploadedBy: req.body.uploadedBy,
             sizeOfFile_MB: req.body.sizeOfFile_MB,

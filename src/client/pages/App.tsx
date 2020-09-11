@@ -10,7 +10,9 @@ import SignUp from "./SignUp";
 import Home from "./Home"
 import Test from "./Test"
 
-import UploadFile from "./UploadFile";
+import UploadFile from "./private/UploadFile";
+import PersonalPage from "./private/PersonalPage";
+import ClusterOverview from "./private/ClusterOverview";
 
 class App extends React.Component {
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -25,7 +27,9 @@ class App extends React.Component {
                 <Container className="p-3">
                     <Switch>
                         <Route exact path='/' component={Home}/>
-                        <Route path='/uploadFile' component={UploadFile}/>
+                        <Route exact path='/private/clusters/:name' component={ClusterOverview}/>
+                        <Route path='/private/area' component={PersonalPage}/>
+                        <Route path='/private/uploadFile' component={UploadFile}/>
                         <Route path='/signIn' component={SignIn} />
                         <Route path='/signUp' component={SignUp}/>
                         <Route path='/test' component={Test}/>

@@ -1,6 +1,7 @@
 import { Sequelize } from "sequelize";
 import config from "../../util/config";
-import models from "./testdb.model";
+import metadatadb from "./metadatadb.model";
+import cognitoRolesdb from "./cognitoRolesdb.model"
 
 const sequelize = new Sequelize(config.db.name, config.db.username, config.db.password, {
     host: config.db.host,
@@ -14,12 +15,14 @@ interface DataBase{
     SequelizeService: any
     sequelizeEntity: any
     metadataDB: any
+    cognitoRolesDB: any
 }
 
 const db : DataBase = {
     SequelizeService: Sequelize,
     sequelizeEntity: sequelize,
-    metadataDB: models(sequelize, Sequelize)
+    metadataDB: metadatadb(sequelize, Sequelize),
+    cognitoRolesDB: cognitoRolesdb(sequelize, Sequelize)
 }
 
 export default db

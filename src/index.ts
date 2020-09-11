@@ -6,7 +6,8 @@ import * as bodyParser from "body-parser";
 import AuthController from "./controllers/auth.controller";
 import HomeController from './controllers/home.controller';
 import ProtectedController from "./controllers/protected.controller";
-import DatabaseController from "./controllers/database.controller";
+import FilesMetadataController from "./controllers/filesMetadatadb.controller";
+import CognitoRolesdbController from "./controllers/cognitoRolesdb.controller";
 
 const app = new App({
     port: config.server.port,
@@ -14,7 +15,8 @@ const app = new App({
         new ProtectedController(),
         new HomeController(),
         new AuthController(),
-        new DatabaseController()
+        new FilesMetadataController(),
+        new CognitoRolesdbController()
     ],
     middleWares: [
         bodyParser.json(),
