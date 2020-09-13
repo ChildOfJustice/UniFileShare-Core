@@ -1,9 +1,23 @@
 export default function MetadataDB(sequelize:any, Sequelize:any) {
-    return sequelize.define("metadataDB", {
+    return sequelize.define("filesMetadataDB", {
         //Sequelize types: https://sequelize.org/v5/manual/data-types.html
         // signUpDate: {
         //     type: Sequelize.DATE
         // }
+
+        // 1:1
+//         Organization.belongsTo(User, { foreignKey: 'owner_id' });
+//         User.hasOne(Organization, { foreignKey: 'owner_id' });
+//
+//         // 1:M
+//         Project.hasMany(Task, { foreignKey: 'tasks_pk' });
+//         Task.belongsTo(Project, { foreignKey: 'tasks_pk' });
+//
+//         // N:M
+//         User.belongsToMany(Role, { through: 'user_has_roles', foreignKey: 'user_role_user_id' });
+//         Role.belongsToMany(User, { through: 'user_has_roles', foreignKey: 'roles_identifier' });
+
+
         name: {
             type: Sequelize.STRING(200)
         },

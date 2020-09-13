@@ -18,7 +18,7 @@ class ProtectedController {
     }
 
     home(req: Request, res: Response){
-        res.send("This is a protected page")
+        res.send(JSON.stringify("This is the secret"))
     }
 }
 
