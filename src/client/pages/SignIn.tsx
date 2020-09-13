@@ -139,8 +139,9 @@ class SignIn extends React.Component<ReduxType, IState> {
         })
             .then(res => {
                 console.log(res)
-                let response_ = res.json()
-                console.log(response_)
+                res.json().then(jsonRes => {
+                    console.log(jsonRes)
+                })
 
                 if(res.ok)
                     alert("Successfully get the secret")
