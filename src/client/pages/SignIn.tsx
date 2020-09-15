@@ -17,6 +17,8 @@ import * as tokensService from '../../store/demo/tokens.service'
 import * as storeService from '../../store/demo/store.service'
 import { DemoActions } from '../../store/demo/types';
 
+import { History } from 'history';
+
 
 //to use any action you need to add dispatch as an argument to a function!!
 const mapDispatcherToProps = (dispatch: Dispatch<DemoActions>) => {
@@ -27,8 +29,11 @@ const mapDispatcherToProps = (dispatch: Dispatch<DemoActions>) => {
         saveStore: () => storeService.saveStore(dispatch),
     }
 }
-
-type ReduxType = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatcherToProps>;
+interface ChildComponentProps {
+    history : History
+    /* other props for ChildComponent */
+}
+type ReduxType = ChildComponentProps & ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatcherToProps>;
 
 
 interface IState {
@@ -86,7 +91,7 @@ class SignIn extends React.Component<ReduxType, IState> {
                 const { authToken, loading} = this.props;
 
                 alert("Your access token is: " + authToken)
-
+                this.props.history.push("/private/area")
                 // if(res.ok)
                 //     alert("Successfully signed in")
                 // else alert("Error, see logs for more info")
