@@ -34,14 +34,14 @@ type ReduxType = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispa
 
 
 interface IState {
-    username: string
+    clusters: any
     password: string
 }
 
 
 class PersonalPage extends React.Component<ReduxType, IState> {
     public state: IState = {
-        username: '',
+        clusters: [["", ""]],
         password: '',
     }
 
@@ -63,7 +63,7 @@ class PersonalPage extends React.Component<ReduxType, IState> {
         event.preventDefault()
 
 
-        fetch('/db/findAll?username=TEST_USER',{
+        fetch('/files/metadata/findAll?username=TEST_USER',{
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -83,6 +83,26 @@ class PersonalPage extends React.Component<ReduxType, IState> {
             .catch(error => alert("Fetch error: " + error))
     }
 
+    getAllUserClusters = () => {
+        fetch('/db/findAll?username=TEST_USER',{
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        })
+            .then(res => {
+                console.log(res)
+                res.json().then(jsonRes => {
+                    console.log(jsonRes)
+                })
+
+                if(res.ok)
+                    alert("Successfully get all nodes from db")
+                else alert("Error, see logs for more info")
+            })
+            .catch(error => alert("Fetch error: " + error))
+    }
     //eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     render() {
 

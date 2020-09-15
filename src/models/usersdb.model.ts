@@ -7,8 +7,8 @@ export default function (sequelize:any, Sequelize:any, cognitoRolesDB:any) {
         }
 
     });
-    cognitoRolesDB.hasMany(usersDB, { foreignKey: 'cognitoUserGroupId' });
-    usersDB.belongsTo(cognitoRolesDB, { foreignKey: 'id' });
+    // cognitoRolesDB.hasMany(usersDB, { foreignKey: 'cognitoUserGroupId' });
+    // usersDB.belongsTo(cognitoRolesDB, { foreignKey: 'id' });
 
     return usersDB
 }

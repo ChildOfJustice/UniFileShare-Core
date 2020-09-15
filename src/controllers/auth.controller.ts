@@ -3,6 +3,10 @@ import { Request, Response } from 'express';
 import {body, ValidationChain, validationResult} from "express-validator";
 
 import CognitoService from '../services/cognito.service';
+import {User} from "../interfaces/user";
+
+import config from "../../util/config"
+import {CognitoIdentityServiceProvider} from "aws-sdk";
 
 class AuthController {
     public path = '/auth'
@@ -38,6 +42,8 @@ class AuthController {
 
         const cognito = new CognitoService();
 
+        const cognitoIdentityServiceProvider = cognito.cognitoIdentity;
+
         cognito.signUpUser(username, password, userAttr)
             .then(promiseOutput =>{
                 if(promiseOutput.success){
@@ -46,6 +52,21 @@ class AuthController {
                     res.status(500).json({"Internal server error": promiseOutput.msg}).end()
                 }
             });
+
+        // var params = {
+        //     GroupName: 'Users', /* required */
+        //     UserPoolId: config.userPoolId, /* required */
+        //     Username: username /* required */
+        //
+        // };
+        // cognitoIdentityServiceProvider.adminAddUserToGroup(params, function(err: any, data: any) {
+        //     if (err) console.log(err, err.stack); // an error occurred
+        //     else     console.log(data);           // successful response
+        // });
+
+        //TODO create a link with Cognito user group
+
+
     }
 
 

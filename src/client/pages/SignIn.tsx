@@ -29,11 +29,11 @@ const mapDispatcherToProps = (dispatch: Dispatch<DemoActions>) => {
         saveStore: () => storeService.saveStore(dispatch),
     }
 }
-interface ChildComponentProps {
+interface IProps {
     history : History
     /* other props for ChildComponent */
 }
-type ReduxType = ChildComponentProps & ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatcherToProps>;
+type ReduxType = IProps & ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatcherToProps>;
 
 
 interface IState {
@@ -106,7 +106,7 @@ class SignIn extends React.Component<ReduxType, IState> {
         event.preventDefault()
 
 
-        fetch('/db/findAll?username=TEST_USER',{
+        fetch('/files/metadata/findAll?username=TEST_USER',{
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'

@@ -116,7 +116,7 @@ export default class UploadFile extends React.Component {
             };
 
 
-            fetch('/db/create',{
+            fetch('/files/metadata/create',{
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

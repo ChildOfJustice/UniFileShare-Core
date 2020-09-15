@@ -10,13 +10,14 @@ const CognitoRolesdb = db.cognitoRolesDB;
 const Op = db.SequelizeService.Op;
 
 class CognitoRolesdbController {
-    public path = '/cognitoRolesDB'
+    public path = '/cognitoRoles'
     public router = express.Router()
     //private authMiddleWare: AuthMiddleWare
 
     constructor() {
         //this.authMiddleWare = new AuthMiddleWare()
         this.initRoutes()
+        // this.admin_create({cognito_user_group: "Admin", role: "ADMINISTRATOR"})
     }
 
 
@@ -46,6 +47,29 @@ class CognitoRolesdbController {
 
     }
 
+    // admin_create (req:any) {
+    //
+    //     // Create a note
+    //     const note: CognitoRole = {
+    //         // username: req.body.username,
+    //         // someReal: req.body.someReal,
+    //         // signUpDate: req.body.signUpDate
+    //         cognito_user_group: req.cognito_user_group,
+    //         role: req.role
+    //     };
+    //
+    //
+    //     // Save Tutorial in the database
+    //     CognitoRolesdb.create(note)
+    //         .then((data: never) => {
+    //             //res.send(JSON.stringify(data));
+    //             console.log("CREATED NEW Cognito Role: " + data)
+    //         })
+    //         .catch((err: { message: string; }) => {
+    //             console.log(err)
+    //         });
+    // }
+
     // Create and Save a new note
     create (req:any, res:any) {
 
@@ -67,7 +91,7 @@ class CognitoRolesdbController {
         CognitoRolesdb.create(note)
             .then((data: never) => {
                 //res.send(JSON.stringify(data));
-                console.log("CREATED NEW note: " + data)
+                console.log("CREATED NEW Cognito Role: " + data)
                 res.send(data);
             })
             .catch((err: { message: string; }) => {
@@ -80,14 +104,14 @@ class CognitoRolesdbController {
     // Retrieve all notes from the database.
     //We use req.query.title to get query string from the Request and consider it as condition for findAll() method.
     findAll (req:any, res:any){
-        const ownedBy = req.query.ownedBy;
-        const condition = ownedBy ? {
-            username: {
-                [Op.iLike]: `%${ownedBy}%`
-            }
-        } : null;
+        // const ownedBy = req.query.ownedBy;
+        // const condition = ownedBy ? {
+        //     username: {
+        //         [Op.iLike]: `%${ownedBy}%`
+        //     }
+        // } : null;
 
-        CognitoRolesdb.findAll({ where: condition })
+        CognitoRolesdb.findAll({ where: null })
             .then((data: any) => {
                 console.log("data: " + data)
                 res.send(data);

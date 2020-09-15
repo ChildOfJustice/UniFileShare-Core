@@ -2,15 +2,15 @@ import * as express from 'express';
 import { Request, Response} from "express";
 import AuthMiddleWare from '../middleware/auth.middleware'
 
-import { FileMetadata } from '../interfaces/databaseTables'
+import { CognitoRole } from '../interfaces/databaseTables'
 
 import db from "../models"
 
-const MetadataDB = db.metadataDB;
+const Cousersdb = db.coUsersDB;
 const Op = db.SequelizeService.Op;
 
-class DatabaseController {
-    public path = '/files/metadata'
+class CousersdbController {
+    public path = '/cousers'
     public router = express.Router()
     //private authMiddleWare: AuthMiddleWare
 
@@ -21,6 +21,7 @@ class DatabaseController {
 
 
     private initRoutes(){
+        //this.router.use(this.authMiddleWare.verifyToken)
 
         // Create a new note
         this.router.post("/create", this.create);
@@ -32,7 +33,7 @@ class DatabaseController {
         // router.get("/published", tutorials.findAllPublished);
         //
         // // Retrieve a single Tutorial with id
-        // router.get("/:id", tutorials.findOne);
+        this.router.get("/:id", this.findOne);
         //
         // // Update a Tutorial with id
         // router.put("/:id", tutorials.update);
@@ -45,12 +46,6 @@ class DatabaseController {
 
     }
 
-    home(req: Request, res: Response){
-        res.send("This is a db home page")
-    }
-
-
-
     // Create and Save a new note
     create (req:any, res:any) {
 
@@ -59,23 +54,17 @@ class DatabaseController {
 
 
         // Create a note
-        const note: FileMetadata = {
+        const note: CognitoRole = {
             // username: req.body.username,
             // someReal: req.body.someReal,
             // signUpDate: req.body.signUpDate
-            name: req.body.name,
-            S3uniqueName: req.body.S3uniqueName,
-            cloud: req.body.cloud,
-            ownedBy: req.body.ownedBy,
-            uploadedBy: req.body.uploadedBy,
-            sizeOfFile_MB: req.body.sizeOfFile_MB,
-            tagsKeys: req.body.tagsKeys,
-            tagsValues: req.body.tagsValues,
+            cognito_user_group: req.body.cognito_user_group,
+            role: req.body.role
         };
 
 
         // Save Tutorial in the database
-        MetadataDB.create(note)
+        Cousersdb.create(note)
             .then((data: never) => {
                 //res.send(JSON.stringify(data));
                 console.log("CREATED NEW note: " + data)
@@ -98,7 +87,7 @@ class DatabaseController {
             }
         } : null;
 
-        MetadataDB.findAll({ where: condition })
+        Cousersdb.findAll({ where: condition })
             .then((data: any) => {
                 console.log("data: " + data)
                 res.send(data);
@@ -111,19 +100,19 @@ class DatabaseController {
     }
 //
 // // Find a single Tutorial with an id
-// exports.findOne = (req, res) => {
-//     const id = req.params.id;
-//
-//     Tutorial.findByPk(id)
-//         .then(data => {
-//             res.send(data);
-//         })
-//         .catch(err => {
-//             res.status(500).send({
-//                 message: "Error retrieving Tutorial with id=" + id
-//             });
-//         });
-// };
+    findOne (req: any, res: any) {
+        const id = req.params.id;
+
+        Cousersdb.findByPk(id)
+            .then((data: any) => {
+                res.send(data);
+            })
+            .catch((err: any) => {
+                res.status(500).send({
+                    message: "Error retrieving Tutorial with id=" + id + ": " + err
+                });
+            });
+    };
 //
 // // Update a Tutorial by the id in the request
 // exports.update = (req, res) => {
@@ -205,4 +194,4 @@ class DatabaseController {
 // };
 }
 
-export default DatabaseController;
+export default CousersdbController;
