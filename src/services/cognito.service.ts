@@ -12,7 +12,7 @@ class CognitoService {
     private secretHash: string = config.secretHash
     private clientId: string = config.clientId
 
-    private cognitoIdentity: any;
+    public cognitoIdentity: any;
     constructor() {
         this.cognitoIdentity = new AWS.CognitoIdentityServiceProvider(this.config);
     }

@@ -6,10 +6,12 @@ import Button from "react-bootstrap/Button";
 import { connect } from 'react-redux';
 import { IRootState } from '../../store';
 import exp = require("constants");
-
+import { History } from 'history';
+import {User} from "../../interfaces/user";
 
 interface IProps {
-
+    history : History
+    /* other props for ChildComponent */
 }
 interface IState {
     smth: string
@@ -59,9 +61,36 @@ export default class SignUp extends React.Component<IProps, IState> {
             .then(res => {
                 let response_ = res.json()
                 console.log(response_)
-                if(res.ok)
+                if(res.ok) {
                     alert("Successfully signed you up")
+                    this.props.history.push("/")
+                }
                 else alert("Error, see logs for more info")
+            })
+            .catch(error => alert("Fetch error: " + error))
+
+        const userData2: User = {
+            name: this.userName,
+            cognitoUserGroupId: 2,//TODO^
+            signUpDate: Date()
+        }
+
+        fetch('/users/create',{
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: JSON.stringify(userData2)
+        })
+            .then(res => {
+                let response_ = res.json()
+                //console.log(response_)
+                if(res.ok) {
+                    //alert("Successfully signed you up")
+                    //this.props.history.push("/")
+                }
+                else alert("Error with DB, see logs for more info")
             })
             .catch(error => alert("Fetch error: " + error))
     }

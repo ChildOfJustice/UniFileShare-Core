@@ -5,8 +5,8 @@ import * as fetch from 'node-fetch'
 import config from "../../util/config";
 import {User} from "../interfaces/user";
 
-export const pems: any = {}
-export const pems2: any= {}
+const pems: any = {}
+const pems2: any= {}
 
 class AuthMiddleware{
     public pems_: any
@@ -31,7 +31,7 @@ class AuthMiddleware{
     //     }));
     // }
 
-    public async verifyToken(req: Request, res: Response, next: () => void): Promise<User> {
+    public async verifyToken(req: Request, res: Response, next: () => void): Promise<void> {
         const token = req.header('Auth')
         const idToken = req.header('Identity')!
 
@@ -81,12 +81,11 @@ class AuthMiddleware{
 
             console.log(`Decoded and verified id token from aws ${JSON.stringify(decodedIdToken)}`);
 
-            _userInfo = {
-                // @ts-ignore
-                name: decodedIdToken["username"],
-                id: "0",
-                role: "A"
-            }
+            // _userInfo = {
+            //     // @ts-ignore
+            //     name: decodedIdToken["username"],
+            //     role: "A"
+            // }
 
             /*
           const pem = jwkToPem(jwk);
@@ -104,7 +103,6 @@ class AuthMiddleware{
           return returnObject;
              */
         }
-        return new Promise<User>((resolve, reject) => {resolve(_userInfo)})
     }
 
     private async setUp() {

@@ -8,6 +8,10 @@ import HomeController from './controllers/home.controller';
 import ProtectedController from "./controllers/protected.controller";
 import FilesMetadataController from "./controllers/filesMetadatadb.controller";
 import CognitoRolesdbController from "./controllers/cognitoRolesdb.controller";
+import ClustersdbController from "./controllers/clustersdb.controller";
+import CousersdbController from "./controllers/co-usersdb.controller";
+import File_ClusterdbController from "./controllers/file-clusterSubdb.controller";
+import UsersdbController from "./controllers/usersdb.controller";
 
 const app = new App({
     port: config.server.port,
@@ -16,7 +20,11 @@ const app = new App({
         new HomeController(),
         new AuthController(),
         new FilesMetadataController(),
-        new CognitoRolesdbController()
+        new CognitoRolesdbController(),
+        new ClustersdbController(),
+        new CousersdbController(),
+        new File_ClusterdbController(),
+        new UsersdbController()
     ],
     middleWares: [
         bodyParser.json(),
