@@ -1,37 +1,17 @@
-import { Request, Response } from 'express'
-import * as jwt from 'jsonwebtoken'
-import * as jwkToPem from 'jwk-to-pem'
-import * as fetch from 'node-fetch'
-import config from "../../util/config";
+import {pems} from "./auth.middleware"
+import {pems2} from "./auth.middleware"
+import {Request, Response} from "express";
 import {User} from "../interfaces/user";
-
-export const pems: any = {}
-export const pems2: any= {}
-
-class AuthMiddleware{
-    public pems_: any
-    public pems2_: any
+import * as jwt from "jsonwebtoken";
 
 
-    private userPoolId = config.userPoolId
-    private userPoolRegion = config.userPoolRegion
+class IdentityMiddleware{
 
-    constructor() {
-        this.setUp()
-        this.pems_ = pems
-        this.pems2_ = pems2
+    public test(req: Request, res: Response, next: () => void){
+
     }
 
-    // async getKey(kidId: any) {
-    //     return new Promise(((resolve, reject) => {
-    //         client.getKeys((err: any, keys: any[]) => {
-    //             const key1 = keys.find(k => k.kid === kidId);
-    //             resolve(key1);
-    //         });
-    //     }));
-    // }
-
-    public async verifyToken(req: Request, res: Response, next: () => void): Promise<User> {
+    public async verifyTokenFromStore(req: Request, res: Response, next: () => void): Promise<User> {
         const token = req.header('Auth')
         const idToken = req.header('Identity')!
 
@@ -106,38 +86,6 @@ class AuthMiddleware{
         }
         return new Promise<User>((resolve, reject) => {resolve(_userInfo)})
     }
-
-    private async setUp() {
-        const URL = `https://cognito-idp.${this.userPoolRegion}.amazonaws.com/${this.userPoolId}/.well-known/jwks.json`
-
-        try{
-            // @ts-ignore
-            const response = await fetch(URL);
-            if (response.status !== 200){
-                throw `request not successful`
-            }
-            const data = await response.json()
-            const { keys } = data
-            for (let index = 0; index < keys.length; index++) {
-                const key = keys[index]
-                const key_id = key.kid
-                const modulus = key.n
-                const exponent = key.e
-                const key_type = key.kty
-                const jwk = { kty: key_type, n: modulus, e: exponent }
-                const pem = jwkToPem(jwk)
-                pems[key_id] = pem
-
-            }
-
-            console.log("got all pems: " + this.pems_.toString())
-        } catch (error) {
-            console.log("cannot get pems")
-            console.log(error)
-        }
-
-
-    }
 }
 
-export default AuthMiddleware;
+export default IdentityMiddleware;
