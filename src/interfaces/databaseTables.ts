@@ -10,10 +10,9 @@ export interface FileMetadata {
 }
 
 export interface Cluster {
-    id: string
-    owner_user_id: string
-    ownedBy: string
-    created: string
+    name: string
+    ownerUserId: string
+    createdDate: string
 }
 
 export interface CognitoRole {

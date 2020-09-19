@@ -2,7 +2,7 @@ import * as express from 'express';
 import { Request, Response} from "express";
 import AuthMiddleWare from '../middleware/auth.middleware'
 
-import { CognitoRole } from '../interfaces/databaseTables'
+import {Cluster, CognitoRole} from '../interfaces/databaseTables'
 
 import db from "../models"
 
@@ -54,12 +54,12 @@ class ClustersdbController {
 
 
         // Create a note
-        const note: CognitoRole = {
+        const note: Cluster = {
             // username: req.body.username,
             // someReal: req.body.someReal,
-            // signUpDate: req.body.signUpDate
-            cognito_user_group: req.body.cognito_user_group,
-            role: req.body.role
+            name: req.body.name,
+            ownerUserId: req.body.ownerUserId,
+            createdDate: Date()
         };
 
 
@@ -67,7 +67,7 @@ class ClustersdbController {
         Clustersdb.create(note)
             .then((data: never) => {
                 //res.send(JSON.stringify(data));
-                console.log("CREATED NEW note: " + data)
+                console.log("CREATED NEW CLUSTER: " + data)
                 res.send(data);
             })
             .catch((err: { message: string; }) => {
@@ -80,11 +80,12 @@ class ClustersdbController {
     // Retrieve all notes from the database.
     //We use req.query.title to get query string from the Request and consider it as condition for findAll() method.
     findAll (req:any, res:any){
-        const ownedBy = req.query.ownedBy;
-        const condition = ownedBy ? {
-            username: {
-                [Op.iLike]: `%${ownedBy}%`
-            }
+        //https://stackoverflow.com/questions/61615632/sequelize-how-to-compare-equality-between-dates
+        //https://sequelize.org/v5/manual/querying.html
+        const ownerUserId = req.query.ownerUserId;
+        console.log("WWW! -> " + ownerUserId)
+        const condition = ownerUserId ? {
+            ownerUserId: ownerUserId
         } : null;
 
         Clustersdb.findAll({ where: condition })

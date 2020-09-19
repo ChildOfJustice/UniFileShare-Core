@@ -9,23 +9,46 @@ import exp = require("constants");
 import { History } from 'history';
 import {User} from "../../interfaces/user";
 
+const mapStateToProps = ({ demo }: IRootState) => {
+    const { authToken, idToken, loading } = demo;
+    return { authToken, idToken, loading };
+}
+
+import { Dispatch } from 'redux';
+import * as asyncactions from '../../store/demo/async-actions';
+import * as tokensService from '../../store/demo/tokens.service'
+import * as storeService from '../../store/demo/store.service'
+import { DemoActions } from '../../store/demo/types';
+
+//to use any action you need to add dispatch as an argument to a function!!
+const mapDispatcherToProps = (dispatch: Dispatch<DemoActions>) => {
+    return {
+        setAuthToken: (token: string) => tokensService.setAuthToken(dispatch, token),
+        setIdToken: (token: string) => tokensService.setIdToken(dispatch, token),
+        loadStore: () => storeService.loadStore(dispatch),
+        saveStore: () => storeService.saveStore(dispatch),
+    }
+}
 interface IProps {
     history : History
     /* other props for ChildComponent */
 }
+type ReduxType = IProps & ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatcherToProps>;
+
 interface IState {
     smth: string
 
 }
 
-export default class SignUp extends React.Component<IProps, IState> {
+class SignUp extends React.Component<ReduxType, IState> {
 
     userName: string
     password: string
     email: string
+    fetchesService: any
 
     // Initialize the state
-    constructor(props: IProps){
+    constructor(props: ReduxType){
         super(props);
 
         this.state = {
@@ -43,7 +66,6 @@ export default class SignUp extends React.Component<IProps, IState> {
 
         alert(this.userName + " " + this.password + " " + this.email + " test state: " + this.state.smth)
 
-
         let userData = {
             username: this.userName,
             password: this.password,
@@ -59,19 +81,21 @@ export default class SignUp extends React.Component<IProps, IState> {
             body: JSON.stringify(userData)
         })
             .then(res => {
-                let response_ = res.json()
-                console.log(response_)
-                if(res.ok) {
-                    alert("Successfully signed you up")
-                    this.props.history.push("/")
-                }
-                else alert("Error, see logs for more info")
+
+                res.json().then(jsonRes => {
+                    console.log(jsonRes)
+                    if (res.ok) {
+                        alert("Successfully signed you up")
+
+                    } else alert("Error, see logs for more info")
+                })
             })
             .catch(error => alert("Fetch error: " + error))
 
+        //add to the database
         const userData2: User = {
             name: this.userName,
-            cognitoUserGroupId: 2,//TODO^
+            cognitoUserGroup: "Users",//TODO^
             signUpDate: Date()
         }
 
@@ -84,15 +108,46 @@ export default class SignUp extends React.Component<IProps, IState> {
             body: JSON.stringify(userData2)
         })
             .then(res => {
-                let response_ = res.json()
-                //console.log(response_)
-                if(res.ok) {
-                    //alert("Successfully signed you up")
-                    //this.props.history.push("/")
-                }
-                else alert("Error with DB, see logs for more info")
+
+                res.json().then(jsonRes => {
+
+                    if (res.ok) {
+                        //alert("Successfully signed you up")
+                        this.props.history.push("/")
+                    } else alert("Error with DB, see logs for more info")
+                })
             })
             .catch(error => alert("Fetch error: " + error))
+
+        //add tokens to the store and redirect to the client page
+        //TODO YOU NEED TO CONFIRM THE USER <----(!)
+        // fetch('/auth/signIn',{
+        //     method: 'POST',
+        //     headers: {
+        //         'Content-Type': 'application/json'
+        //         // 'Content-Type': 'application/x-www-form-urlencoded',
+        //     },
+        //     body: JSON.stringify(userData)
+        // })
+        //     .then(res => res.json()
+        //     )
+        //     .then(data => {
+        //         console.log("JSON res: " + data.data.AuthenticationResult)
+        //         // @ts-ignore
+        //
+        //
+        //         // @ts-ignore
+        //         this.props.setAuthToken(data.data.AuthenticationResult.AccessToken)
+        //         this.props.setIdToken(data.data.AuthenticationResult.IdToken)
+        //         this.props.saveStore()
+        //
+        //         this.props.history.push("/private/area")
+        //         // if(res.ok)
+        //         //     alert("Successfully signed in")
+        //         // else alert("Error, see logs for more info")
+        //
+        //     })
+        //     .catch(error => alert("Fetch error: " + error))
     }
 
     _onChangeUserName = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -129,4 +184,4 @@ export default class SignUp extends React.Component<IProps, IState> {
     }
 }
 
-//export default connect(mapStateToProps, mapDispatcherToProps)(SignUp);
+export default connect(mapStateToProps, mapDispatcherToProps)(SignUp);
