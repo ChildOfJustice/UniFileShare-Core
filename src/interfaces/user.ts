@@ -1,5 +1,5 @@
 export interface User {
     name: string
-    cognitoUserGroupId: number
+    cognitoUserGroup: string
     signUpDate: string
 }

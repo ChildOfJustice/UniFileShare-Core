@@ -76,28 +76,34 @@ class SignIn extends React.Component<ReduxType, IState> {
             },
             body: JSON.stringify(userData)
         })
-            .then(res => res.json()
-            )
-            .then(data => {
-                console.log("JSON res: " + data.data.AuthenticationResult)
-                // @ts-ignore
+            .then(res => {
+
+                res.json().then(jsonRes => {
+                    console.log(jsonRes)
+                    if(res.status == 500){
+                        // @ts-ignore
+                        alert("Error: " + JSON.stringify(jsonRes["Internal server error"]))
+                    }
+                    console.log("JSON res: " + jsonRes.data.AuthenticationResult)
+                    // @ts-ignore
 
 
-                // @ts-ignore
-                this.props.setAuthToken(data.data.AuthenticationResult.AccessToken)
-                this.props.setIdToken(data.data.AuthenticationResult.IdToken)
-                this.props.saveStore()
-                // @ts-ignore
-                const { authToken, loading} = this.props;
+                    // @ts-ignore
+                    this.props.setAuthToken(jsonRes.data.AuthenticationResult.AccessToken)
+                    this.props.setIdToken(jsonRes.data.AuthenticationResult.IdToken)
+                    this.props.saveStore()
+                    // @ts-ignore
+                    const { authToken, loading} = this.props;
 
-                alert("Your access token is: " + authToken)
-                this.props.history.push("/private/area")
-                // if(res.ok)
-                //     alert("Successfully signed in")
-                // else alert("Error, see logs for more info")
-
+                    //alert("Your access token is: " + authToken)
+                    this.props.history.push("/private/area")
+                    // if(res.ok)
+                    //     alert("Successfully signed in")
+                    // else alert("Error, see logs for more info")
+                })
             })
-            .catch(error => alert("Fetch error: " + error))
+
+            //.catch(error => alert("Fetch error: " + error))
 
         //browserHistory.push('/home');
     }

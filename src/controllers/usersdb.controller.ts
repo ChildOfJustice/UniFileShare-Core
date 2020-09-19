@@ -59,7 +59,7 @@ class UsersdbController {
             name: req.body.username,
             // someReal: req.body.someReal,
             // signUpDate: req.body.signUpDate
-            cognitoUserGroupId: req.body.cognitoUserGroupId,
+            cognitoUserGroup: req.body.cognitoUserGroup,
             signUpDate: req.body.signUpDate
         };
 

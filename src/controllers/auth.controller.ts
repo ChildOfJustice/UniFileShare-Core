@@ -81,9 +81,11 @@ class AuthController {
 
         console.log("Validation successful!")
 
+
         const { username, password } = req.body;
         const cognito = new CognitoService();
         cognito.signInUser(username, password)
+            .catch()
             .then(promiseOutput =>{
                 if(promiseOutput.success){
                     res.status(200).json({"data": promiseOutput.msg}).end()
@@ -91,6 +93,7 @@ class AuthController {
                     res.status(500).json({"Internal server error": promiseOutput.msg}).end()
                 }
             });
+
 
     }
     verify(req: Request, res: Response){
