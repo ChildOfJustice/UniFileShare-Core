@@ -55,6 +55,7 @@ class ClustersdbController {
 
         // Create a note
         const note: Cluster = {
+            clusterId: null,
             // username: req.body.username,
             // someReal: req.body.someReal,
             name: req.body.name,
@@ -83,7 +84,6 @@ class ClustersdbController {
         //https://stackoverflow.com/questions/61615632/sequelize-how-to-compare-equality-between-dates
         //https://sequelize.org/v5/manual/querying.html
         const ownerUserId = req.query.ownerUserId;
-        console.log("WWW! -> " + ownerUserId)
         const condition = ownerUserId ? {
             ownerUserId: ownerUserId
         } : null;

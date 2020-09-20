@@ -69,12 +69,14 @@ class UsersdbController {
             .then((data: never) => {
                 //res.send(JSON.stringify(data));
                 console.log("CREATED NEW USER: " + data)
-                res.send(data);
+                if(res != null)
+                    res.send(data);
             })
             .catch((err: { message: string; }) => {
-                res.status(500).send({
-                    message: err.message || "Some error occurred while creating the note."
-                });
+                if(res != null)
+                    res.status(500).send({
+                        message: err.message || "Some error occurred while creating the note."
+                    });
             });
     }
 

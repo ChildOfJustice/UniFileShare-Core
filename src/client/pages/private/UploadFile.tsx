@@ -4,7 +4,7 @@ import Button from "react-bootstrap/Button";
 import * as React from "react";
 import * as AWS from "aws-sdk"
 import * as CryptoJS from "crypto-js"
-import {FileMetadata} from "../../../interfaces/databaseTables";
+import {File_ClusterSub, FileMetadata} from "../../../interfaces/databaseTables";
 import { v4 as uuidv4 } from 'uuid'
 
 import config from "../../../../util/config";
@@ -16,9 +16,14 @@ import config from "../../../../util/config";
 // var storageKey = "SECRET";
 //^
 
+interface IState {
+}
+interface IProps {
+    clusterId: string
+}
 
 // eslint-disable-next-line react/display-name,@typescript-eslint/explicit-module-boundary-types
-export default class UploadFile extends React.Component {
+export default class UploadFile extends React.Component<IProps, IState> {
 
     tagIndex = 1;
 
@@ -126,8 +131,37 @@ export default class UploadFile extends React.Component {
             })
                 .then(res => {
                     console.log(res)
-                    res.json().then(jsonRes => {
-                        console.log(jsonRes)
+                    res.json().then(fileInfo => {
+                        console.log(fileInfo)
+                        //Boud file to cluster in SUB table
+
+                        const file_cluster: File_ClusterSub = {
+                            fileId: fileInfo.id,
+                            // @ts-ignore
+                            clusterId: this.props.match.params.clusterId
+                        };
+
+
+                        fetch('/file_cluster/create',{
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                                // 'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: JSON.stringify(file_cluster)
+                        })
+                            .then(res => {
+                                console.log(res)
+                                res.json().then(jsonRes => {
+                                    console.log(jsonRes)
+                                })
+
+                                if(res.ok)
+                                    console.log("Successfully get the response from db")
+                                else alert("Error, see logs for more info")
+                            })
+                            .catch(error => alert("Fetch error: " + error))
+                        ///^
                     })
 
                     if(res.ok)
@@ -136,6 +170,7 @@ export default class UploadFile extends React.Component {
                 })
                 .catch(error => alert("Fetch error: " + error))
             ///^
+
 
             return;
 

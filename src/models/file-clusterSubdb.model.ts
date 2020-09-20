@@ -16,5 +16,5 @@ export default function (sequelize:any, Sequelize:any, filesMetadataDB:any, clus
     file_clusterSubDB.belongsTo(filesMetadataDB, {foreignKey: 'id'});
     filesMetadataDB.hasMany(file_clusterSubDB, { foreignKey: 'fileId' });
 
-    return filesMetadataDB
+    return file_clusterSubDB
 }

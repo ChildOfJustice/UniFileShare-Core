@@ -7,6 +7,7 @@ import { FileMetadata } from '../interfaces/databaseTables'
 import db from "../models"
 
 const MetadataDB = db.metadataDB;
+const File_ClusterSubDB = db.file_clusterSubDB;
 const Op = db.SequelizeService.Op;
 
 class DatabaseController {
@@ -91,14 +92,28 @@ class DatabaseController {
     // Retrieve all notes from the database.
     //We use req.query.title to get query string from the Request and consider it as condition for findAll() method.
     findAll (req:any, res:any){
-        const ownedBy = req.query.ownedBy;
-        const condition = ownedBy ? {
-            username: {
-                [Op.iLike]: `%${ownedBy}%`
-            }
+
+        const clusterId = req.query.clusterId;
+        const condition = clusterId ? {
+            clusterId: clusterId
         } : null;
 
-        MetadataDB.findAll({ where: condition })
+
+        db.Course.find({
+            where: {clusterId: req.query.clusterId},
+            attributes: ['fileId'],
+            include: [{db, attributes:['DisplayLabel']}]})
+            .then(function(courses) {
+                return res.json(courses);
+            })
+            .catch(function(err) {
+                return res.render('error', {
+                    error: err,
+                    status: 500
+                });
+            });
+
+        File_ClusterSubDB.findAll({ where: condition })
             .then((data: any) => {
                 console.log("data: " + data)
                 res.send(data);
@@ -108,6 +123,17 @@ class DatabaseController {
                     message: err.message || "Some error occurred while retrieving tutorials."
                 });
             });
+
+        // MetadataDB.findAll({ where: condition })
+        //     .then((data: any) => {
+        //         console.log("data: " + data)
+        //         res.send(data);
+        //     })
+        //     .catch((err: { message: string; }) => {
+        //         res.status(500).send({
+        //             message: err.message || "Some error occurred while retrieving tutorials."
+        //         });
+        //     });
     }
 //
 // // Find a single Tutorial with an id

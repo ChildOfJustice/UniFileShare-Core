@@ -44,7 +44,7 @@ interface IState {
 class PersonalPage extends React.Component<ReduxType, IState> {
     public state: IState = {
         newClusterName: "",
-        clusters: [["", ""]],
+        clusters: [],
         password: '',
     }
 
@@ -56,6 +56,7 @@ class PersonalPage extends React.Component<ReduxType, IState> {
     componentDidMount() {
         //alert("ONLOAD!!")
         this.props.loadStore()
+        this.getAllUserClusters()
     }
 
     handleTableClick = () => {
@@ -87,7 +88,9 @@ class PersonalPage extends React.Component<ReduxType, IState> {
     }
 
     createCluster = () => {
+        //TODO
         let clusterData: Cluster = {
+            clusterId: null,
             name: this.state.newClusterName,
             ownerUserId: "1",
             createdDate: Date(),
@@ -112,6 +115,8 @@ class PersonalPage extends React.Component<ReduxType, IState> {
                 else alert("Error, see logs for more info")
             })
             .catch(error => alert("Fetch error: " + error))
+
+        this.getAllUserClusters()
     }
 
     getAllUserClusters = () => {
@@ -126,6 +131,7 @@ class PersonalPage extends React.Component<ReduxType, IState> {
                 console.log(res)
                 res.json().then(jsonRes => {
                     console.log(jsonRes)
+                    this.setState({clusters: jsonRes})
                 })
 
                 if(res.ok)
@@ -141,9 +147,7 @@ class PersonalPage extends React.Component<ReduxType, IState> {
 
     //eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     render() {
-        //this.getAllUserClusters()
-        const list = [["1","FIRST"], ["2","SECOND"]]
-
+        var counter = 0
         const PersonalPage = (
             <div>
                 <Form.Group controlId="formBasicUserName">
@@ -155,11 +159,9 @@ class PersonalPage extends React.Component<ReduxType, IState> {
 
                 <Button onClick={this.getAllUserClusters} variant="primary" >Check all your clusters</Button>
 
-                <NavItem eventKey={7}>Smth</NavItem>
+                <NavItem>Smth</NavItem>
                 <Navbar bg="light">
-                    <LinkContainer to="/private/uploadFile">
-                        <Navbar.Brand>Upload file</Navbar.Brand>
-                    </LinkContainer>
+
                 </Navbar>
                 <Table striped bordered hover variant="dark">
                     <thead>
@@ -169,18 +171,17 @@ class PersonalPage extends React.Component<ReduxType, IState> {
                     </tr>
                     </thead>
                     <tbody>
-                    <Link to={{
-                        pathname:'/ideas/:',
-                        }}>Ideas</Link>
-                    {list.map(
-                        l => <LinkContainer to={{
-                            pathname:'/private/clusters/'+l[1],
+                    {this.state.clusters.map(
+                        (l: Cluster) => <LinkContainer to={{
+                            pathname:'/private/clusters/'+l.clusterId,
                             }}>
                             <tr onClick={this.handleTableClick}>
-                            {l.map(
-                                el => <td key={el}>
-                                    {el}
-                                </td>)}
+                                <td key={counter}>
+                                    {counter++}
+                                </td>
+                                <td key={l.createdDate}>
+                                    {l.name}
+                                </td>
                             </tr>
                         </LinkContainer>
                     )}
