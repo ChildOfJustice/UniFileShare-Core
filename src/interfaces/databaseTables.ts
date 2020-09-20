@@ -9,7 +9,13 @@ export interface FileMetadata {
     tagsValues: string[]
 }
 
+export interface File_ClusterSub {
+    fileId: string
+    clusterId: string
+}
+
 export interface Cluster {
+    clusterId: number | null
     name: string
     ownerUserId: string
     createdDate: string

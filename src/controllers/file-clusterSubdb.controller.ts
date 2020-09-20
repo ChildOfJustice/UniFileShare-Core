@@ -2,7 +2,7 @@ import * as express from 'express';
 import { Request, Response} from "express";
 import AuthMiddleWare from '../middleware/auth.middleware'
 
-import { CognitoRole } from '../interfaces/databaseTables'
+import {CognitoRole, File_ClusterSub} from '../interfaces/databaseTables'
 
 import db from "../models"
 
@@ -48,18 +48,12 @@ class File_ClusterdbController {
 
     // Create and Save a new note
     create (req:any, res:any) {
-
-        // Validate request
-        //^
-
+        console.log("SUB CREATED")
 
         // Create a note
-        const note: CognitoRole = {
-            // username: req.body.username,
-            // someReal: req.body.someReal,
-            // signUpDate: req.body.signUpDate
-            cognito_user_group: req.body.cognito_user_group,
-            role: req.body.role
+        const note: File_ClusterSub = {
+            fileId: req.body.fileId,
+            clusterId: req.body.clusterId
         };
 
 
@@ -80,11 +74,9 @@ class File_ClusterdbController {
     // Retrieve all notes from the database.
     //We use req.query.title to get query string from the Request and consider it as condition for findAll() method.
     findAll (req:any, res:any){
-        const ownedBy = req.query.ownedBy;
-        const condition = ownedBy ? {
-            username: {
-                [Op.iLike]: `%${ownedBy}%`
-            }
+        const clusterId = req.query.clusterId;
+        const condition = clusterId ? {
+            clusterId: clusterId
         } : null;
 
         File_Clusterdb.findAll({ where: condition })

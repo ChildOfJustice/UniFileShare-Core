@@ -35,7 +35,7 @@ interface IState {
     files: FileMetadata[]
 }
 interface IProps {
-    clusterName: string
+    clusterId: string
 }
 
 
@@ -52,7 +52,7 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
         //TODO
         //loadFilesMetadata(this.props.clusterName)
         // @ts-ignore
-        alert("!!!!=> " + this.props.match.params.name)
+        alert("!!!!=> " + this.props.match.params.clusterId)
         this.props.loadStore()
     }
     downloadFile = (fileName:string, cloud:string) => {
@@ -146,9 +146,8 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
 
     }
 
-    loadFilesMetadata = (clusterName: string) => {
-
-        fetch('/db/findAll?clusterName='+clusterName,{
+    loadFilesMetadata = (clusterId: number) => {
+        fetch('/files/metadata/findAll?clusterId='+clusterId,{
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -159,57 +158,75 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
                 console.log(res)
                 res.json().then(jsonRes => {
                     console.log(jsonRes)
+                    this.setState({files: jsonRes})
                 })
 
                 if(res.ok)
-                    alert("Successfully get all nodes from db")
+                    console.log("Successfully get all nodes from db")
                 else alert("Error, see logs for more info")
             })
             .catch(error => alert("Fetch error: " + error))
     }
 
-    //eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     render() {
-
-        const clusterOverviewPage = (
-            <div>
-                <NavItem eventKey={7}>Smth</NavItem>
-                <Navbar bg="light">
-                    <LinkContainer to="/private/uploadFile">
-                        <Navbar.Brand>Upload file</Navbar.Brand>
-                    </LinkContainer>
-                </Navbar>
-                <Table striped bordered hover variant="dark">
-                    <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Cluster</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {this.state.files.map(
-                        f => <tr onClick={() => this.downloadFile(f.S3uniqueName, f.cloud)}>
-                            <td key={"number"}>
-                                {" "}
-                            </td>
-                            <td key={f.name}>
-                                {f}
-                            </td>
-                        </tr>
-                    )}
-
-                    </tbody>
-                </Table>
-            </div>
-
-        )
-
+        // @ts-ignore
+        this.loadFilesMetadata(this.props.match.params.clusterId)
 
         return (
-            clusterOverviewPage
+            <div>
+                TEST
 
+                <LinkContainer to={// @ts-ignore
+                    "/private/uploadFile/" + this.props.match.params.clusterId}>
+                    <Navbar.Brand>Upload file</Navbar.Brand>
+                </LinkContainer>
+
+            </div>
         )
     }
+
+    //eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    // render() {
+    //
+    //     const clusterOverviewPage = (
+    //         <div>
+    //             <NavItem>Smth</NavItem>
+    //             <Navbar bg="light">
+    //                 <LinkContainer to="/private/uploadFile">
+    //                     <Navbar.Brand>Upload file</Navbar.Brand>
+    //                 </LinkContainer>
+    //             </Navbar>
+    //             <Table striped bordered hover variant="dark">
+    //                 <thead>
+    //                 <tr>
+    //                     <th>#</th>
+    //                     <th>Cluster</th>
+    //                 </tr>
+    //                 </thead>
+    //                 <tbody>
+    //                 {this.state.files.map(
+    //                     f => <tr onClick={() => this.downloadFile(f.S3uniqueName, f.cloud)}>
+    //                         <td key={"number"}>
+    //                             {" "}
+    //                         </td>
+    //                         <td key={f.name}>
+    //                             {f}
+    //                         </td>
+    //                     </tr>
+    //                 )}
+    //
+    //                 </tbody>
+    //             </Table>
+    //         </div>
+    //
+    //     )
+    //
+    //
+    //     return (
+    //         clusterOverviewPage
+    //
+    //     )
+    // }
 
 
 }

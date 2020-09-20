@@ -1,5 +1,5 @@
 import * as express from 'express';
-import { Application } from 'express';
+import {Application} from 'express';
 import * as path from "path";
 import * as exphbs from "express-handlebars";
 import * as compression from "compression";
@@ -8,12 +8,12 @@ import * as bodyParser from "body-parser";
 import * as serveFavicon from "serve-favicon";
 import * as cors from "cors"
 
-import fetch from "node-fetch"
-
 import db from "./models"
 import {CognitoRole} from "./interfaces/databaseTables";
-import CognitoRolesdbController from "./controllers/cognitoRolesdb.controller";
-import UsersdbController from "./controllers/usersdb.controller";
+import {User} from "./interfaces/user";
+
+const Usersdb = db.usersDB;
+const Op = db.SequelizeService.Op;
 
 class App {
     public app: Application
@@ -59,7 +59,7 @@ class App {
             console.log('Connection has been established successfully.');
             //db.sequelizeEntity.sync();
             //for development:
-            db.sequelizeEntity.sync({ force: true }).then(() => {
+            db.sequelizeEntity.sync({force: true}).then(() => {
                 console.log("Drop and re-sync db.");
             });
             //^
@@ -69,7 +69,7 @@ class App {
         }
     }
 
-    public initRolesForCognitoUserGroups(){
+    public initRolesForCognitoUserGroups() {
         //const cognitoRolesdbController = new UsersdbController()
         // cognitoRolesdbController.create({cognito_user_group: "Admin", role: "ADMINISTRATOR"})
         // cognitoRolesdbController.create({cognito_user_group: "User", role: "ORDINARY_USER"})
@@ -79,73 +79,71 @@ class App {
                 role: "ADMINISTRATOR"
             }
 
-            // fetch('localhost:3001/cognitoRoles/create',{
-            //     method: 'POST',
-            //     headers: {
-            //         'Content-Type': 'application/json'
-            //         // 'Content-Type': 'application/x-www-form-urlencoded',
-            //     },
-            //     body: JSON.stringify(cognitoRole1)
-            // })
-            //     .then(res => {
-            //         let response_ = res.json()
-            //         console.log(response_)
-            //         if(res.ok) {
-            //             //alert("Successfully signed you up")
-            //         }
-            //         else alert("Error with DB INITIALIZATION 1, see logs for more info")
-            //     })
-            //     .catch(error => console.log("Fetch error: " + error))
-            // //^
             // let cognitoRole2: CognitoRole = {
             //     cognito_user_group: "User",
             //     role: "ORDINARY_USER"
             // }
-            // fetch('localhost:3001/cognitoRoles/create',{
-            //     method: 'POST',
-            //     headers: {
-            //         'Content-Type': 'application/json'
-            //         // 'Content-Type': 'application/x-www-form-urlencoded',
-            //     },
-            //     body: JSON.stringify(cognitoRole2)
-            // })
-            //     .then(res => {
-            //         let response_ = res.json()
-            //         console.log(response_)
-            //         if(res.ok) {
-            //             //alert("Successfully signed you up")
-            //         }
-            //         else alert("Error with DB INITIALIZATION 2, see logs for more info")
-            //     })
-            //     .catch(error => console.log("Fetch error: " + error))
-            // //^
-            // console.log("I WAS HERE!!!")
+
 
         } catch (error) {
             console.error('Unable to connect to the database (2): ', error);
         }
     }
 
+    initAdministratorUser() {
+        const note: User = {
+            name: "ADMIN",
+            // someReal: req.body.someReal,
+            // signUpDate: req.body.signUpDate
+            cognitoUserGroup: "1",
+            signUpDate: Date()
+        };
+
+
+        // Save Tutorial in the database
+        Usersdb.create(note)
+            .then((data: never) => {
+                //res.send(JSON.stringify(data));
+                console.log("CREATED NEW USER: " + data)
+                //res.send(data);
+            })
+            .catch((err: { message: string; }) => {
+                console.log(err)
+                // res.status(500).send({
+                //     message: err.message || "Some error occurred while creating the note."
+                // });
+            });
+    }
+
+    sleep(ms: number) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
     public listen() {
-        this.initRolesForCognitoUserGroups()
         // this.connectToDatabase().then(() => this.app.listen(this.port, () => {
         //     console.log(`App is listening on http://localhost:${this.port}`)
         // }))
         this.app.listen(this.port, async () => {
             await this.connectToDatabase()
+
+            await this.sleep(4000)
+            console.log("DATABASE INITIALISATION:")
+            this.initAdministratorUser()
+
+
             console.log(`App is listening on http://localhost:${this.port}`);
         })
 
     }
 
-    private middlewares(middleWares: any){
+    private middlewares(middleWares: any) {
         // @ts-ignore
         middleWares.forEach(middleWare => {
             this.app.use(middleWare);
         });
     }
 
-    private routes(controllers: any){
+    private routes(controllers: any) {
         // @ts-ignore
         controllers.forEach(controller => {
             this.app.use(controller.path, controller.router);

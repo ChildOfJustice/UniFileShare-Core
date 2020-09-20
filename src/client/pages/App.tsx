@@ -78,9 +78,9 @@ class App extends React.Component {
                 <Container className="p-3">
                     <Switch>
                         <Route exact path='/' component={Home}/>
-                        <Route exact path='/private/clusters/:name' component={ClusterOverview}/>
+                        <Route exact path='/private/clusters/:clusterId' component={ClusterOverview}/>
                         <Route path='/private/area' component={PersonalPage}/>
-                        <Route path='/private/uploadFile' component={UploadFile}/>
+                        <Route path='/private/uploadFile/:clusterId' component={UploadFile}/>
                         <Route path='/signIn' component={SignIn} />
                         <Route path='/signUp' component={SignUp}/>
                         <Route path='/test' component={Test}/>
