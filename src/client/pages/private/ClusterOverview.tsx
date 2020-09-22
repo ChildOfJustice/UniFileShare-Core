@@ -19,7 +19,7 @@ import { DemoActions } from '../../../store/demo/types';
 import {NavItem, Table} from "react-bootstrap";
 import {LinkContainer} from "react-router-bootstrap";
 import Navbar from "react-bootstrap/Navbar";
-import {FileMetadata} from "../../../interfaces/databaseTables";
+import {Cluster, FileMetadata} from "../../../interfaces/databaseTables";
 import * as AWS from "aws-sdk";
 import config from "../../../../util/config";
 
@@ -43,16 +43,21 @@ type ReduxType = IProps & ReturnType<typeof mapStateToProps> & ReturnType<typeof
 
 
 class ClusterOverview extends React.Component<ReduxType, IState> {
+    public state: IState = {
+        files: [],
+    }
+
 
     constructor(props: ReduxType) {
         super(props);
     }
 
     componentDidMount() {
-        //TODO
-        //loadFilesMetadata(this.props.clusterName)
         // @ts-ignore
-        alert("!!!!=> " + this.props.match.params.clusterId)
+        this.loadFilesMetadata(this.props.match.params.clusterId)
+
+        // @ts-ignore
+        //alert("!!!!=> " + this.props.match.params.clusterId)
         this.props.loadStore()
     }
     downloadFile = (fileName:string, cloud:string) => {
@@ -155,7 +160,7 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
             }
         })
             .then(res => {
-                console.log(res)
+                //console.log(res)
                 res.json().then(jsonRes => {
                     console.log(jsonRes)
                     this.setState({files: jsonRes})
@@ -169,66 +174,64 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
     }
 
     render() {
-        // @ts-ignore
-        this.loadFilesMetadata(this.props.match.params.clusterId)
 
+        var counter = 1
         return (
             <div>
-                TEST
-
                 <LinkContainer to={// @ts-ignore
                     "/private/uploadFile/" + this.props.match.params.clusterId}>
                     <Navbar.Brand>Upload file</Navbar.Brand>
                 </LinkContainer>
 
+                <Table striped bordered hover variant="dark">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>File Name</th>
+                        <th>Cloud provider</th>
+                        <th>File owner</th>
+                        <th>Uploaded by</th>
+                        <th>File size (MBs)</th>
+                        <th>    User</th>
+                        <th>Tags</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {this.state.files.map(
+                        (fileMetadata: FileMetadata) =>
+                            <tr onClick={() => this.downloadFile(fileMetadata.S3uniqueName, fileMetadata.cloud)}>
+                                <td key={counter}>
+                                    {counter++}
+                                </td>
+                                <td key={fileMetadata.S3uniqueName}>
+                                    {fileMetadata.name}
+                                </td>
+                                <td>
+                                    {fileMetadata.cloud}
+                                </td>
+                                <td>
+                                    {fileMetadata.uploadedBy}
+                                </td>
+                                <td>
+                                    {fileMetadata.ownedBy}
+                                </td>
+                                <td>
+                                    {fileMetadata.sizeOfFile_MB}
+                                </td>
+                                <td>
+                                    {fileMetadata.tagsKeys.map(keyName => <div>{keyName}</div>) }
+                                </td>
+                                <td>
+                                    {fileMetadata.tagsValues.map(keyName => <div>{keyName}</div>) }
+                                </td>
+                            </tr>
+                    )}
+
+                    </tbody>
+                </Table>
             </div>
         )
     }
-
-    //eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    // render() {
-    //
-    //     const clusterOverviewPage = (
-    //         <div>
-    //             <NavItem>Smth</NavItem>
-    //             <Navbar bg="light">
-    //                 <LinkContainer to="/private/uploadFile">
-    //                     <Navbar.Brand>Upload file</Navbar.Brand>
-    //                 </LinkContainer>
-    //             </Navbar>
-    //             <Table striped bordered hover variant="dark">
-    //                 <thead>
-    //                 <tr>
-    //                     <th>#</th>
-    //                     <th>Cluster</th>
-    //                 </tr>
-    //                 </thead>
-    //                 <tbody>
-    //                 {this.state.files.map(
-    //                     f => <tr onClick={() => this.downloadFile(f.S3uniqueName, f.cloud)}>
-    //                         <td key={"number"}>
-    //                             {" "}
-    //                         </td>
-    //                         <td key={f.name}>
-    //                             {f}
-    //                         </td>
-    //                     </tr>
-    //                 )}
-    //
-    //                 </tbody>
-    //             </Table>
-    //         </div>
-    //
-    //     )
-    //
-    //
-    //     return (
-    //         clusterOverviewPage
-    //
-    //     )
-    // }
-
-
 }
 
 export default connect(mapStateToProps, mapDispatcherToProps)(ClusterOverview);

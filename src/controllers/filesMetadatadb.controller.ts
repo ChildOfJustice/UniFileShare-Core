@@ -99,21 +99,14 @@ class DatabaseController {
         } : null;
 
 
-        db.Course.find({
-            where: {clusterId: req.query.clusterId},
-            attributes: ['fileId'],
-            include: [{db, attributes:['DisplayLabel']}]})
-            .then(function(courses) {
-                return res.json(courses);
+        MetadataDB.findAll({
+            attributes: ['name', 'cloud', 'uploadedBy', 'ownedBy', 'sizeOfFile_MB', 'tagsKeys', 'tagsValues'],
+            include: [{
+                model: db.file_clusterSubDB,
+                where: condition,
+                attributes: []
+                }]
             })
-            .catch(function(err) {
-                return res.render('error', {
-                    error: err,
-                    status: 500
-                });
-            });
-
-        File_ClusterSubDB.findAll({ where: condition })
             .then((data: any) => {
                 console.log("data: " + data)
                 res.send(data);
@@ -123,17 +116,6 @@ class DatabaseController {
                     message: err.message || "Some error occurred while retrieving tutorials."
                 });
             });
-
-        // MetadataDB.findAll({ where: condition })
-        //     .then((data: any) => {
-        //         console.log("data: " + data)
-        //         res.send(data);
-        //     })
-        //     .catch((err: { message: string; }) => {
-        //         res.status(500).send({
-        //             message: err.message || "Some error occurred while retrieving tutorials."
-        //         });
-        //     });
     }
 //
 // // Find a single Tutorial with an id
