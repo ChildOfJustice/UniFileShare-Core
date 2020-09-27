@@ -19,6 +19,7 @@ import * as asyncactions from '../../store/demo/async-actions';
 import * as tokensService from '../../store/demo/tokens.service'
 import * as storeService from '../../store/demo/store.service'
 import { DemoActions } from '../../store/demo/types';
+import config from "../../../util/config";
 
 //to use any action you need to add dispatch as an argument to a function!!
 const mapDispatcherToProps = (dispatch: Dispatch<DemoActions>) => {
@@ -64,7 +65,8 @@ class SignUp extends React.Component<ReduxType, IState> {
     signUp = (event: any) => {
         event.preventDefault()
 
-        alert(this.userName + " " + this.password + " " + this.email + " test state: " + this.state.smth)
+        var userCognitoId: string | null = null
+        //alert(this.userName + " " + this.password + " " + this.email + " test state: " + this.state.smth)
 
         let userData = {
             username: this.userName,
@@ -85,69 +87,75 @@ class SignUp extends React.Component<ReduxType, IState> {
                 res.json().then(jsonRes => {
                     console.log(jsonRes)
                     if (res.ok) {
-                        alert("Successfully signed you up")
+                        userCognitoId = jsonRes.data.UserSub
 
+                        if(userCognitoId == null){
+                            alert("ERROR WITH COGNITO")
+                            return
+                        }
+
+                        //add to the database
+                        const userData2: User = {
+                            name: this.userName,
+                            roleId: config.AppConfig.RolesIds.user,
+                            cognitoUserId: userCognitoId,
+                            signUpDate: Date()
+                        }
+
+                        fetch('/users/create',{
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                                // 'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: JSON.stringify(userData2)
+                        })
+                            .then(res => {
+
+                                res.json().then(jsonRes => {
+
+                                    if (res.ok) {
+                                        alert("Successfully signed you up, now ask the Administrator to confirm your account.")
+                                        this.props.history.push("/")
+                                    } else alert("Error with DB, see logs for more info")
+                                })
+                            })
+                            .catch(error => alert("Fetch error: " + error))
+
+                        //add tokens to the store and redirect to the client page
+                        //TODO YOU NEED TO CONFIRM THE USER <----(!)
+                        // fetch('/auth/signIn',{
+                        //     method: 'POST',
+                        //     headers: {
+                        //         'Content-Type': 'application/json'
+                        //         // 'Content-Type': 'application/x-www-form-urlencoded',
+                        //     },
+                        //     body: JSON.stringify(userData)
+                        // })
+                        //     .then(res => res.json()
+                        //     )
+                        //     .then(data => {
+                        //         console.log("JSON res: " + data.data.AuthenticationResult)
+                        //         // @ts-ignore
+                        //
+                        //
+                        //         // @ts-ignore
+                        //         this.props.setAuthToken(data.data.AuthenticationResult.AccessToken)
+                        //         this.props.setIdToken(data.data.AuthenticationResult.IdToken)
+                        //         this.props.saveStore()
+                        //
+                        //         this.props.history.push("/private/area")
+                        //         // if(res.ok)
+                        //         //     alert("Successfully signed in")
+                        //         // else alert("Error, see logs for more info")
+                        //
+                        //     })
+                        //     .catch(error => alert("Fetch error: " + error))
                     } else alert("Error, see logs for more info")
                 })
             })
             .catch(error => alert("Fetch error: " + error))
 
-        //add to the database
-        const userData2: User = {
-            name: this.userName,
-            cognitoUserGroup: "Users",//TODO^
-            signUpDate: Date()
-        }
-
-        fetch('/users/create',{
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-                // 'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: JSON.stringify(userData2)
-        })
-            .then(res => {
-
-                res.json().then(jsonRes => {
-
-                    if (res.ok) {
-                        //alert("Successfully signed you up")
-                        this.props.history.push("/")
-                    } else alert("Error with DB, see logs for more info")
-                })
-            })
-            .catch(error => alert("Fetch error: " + error))
-
-        //add tokens to the store and redirect to the client page
-        //TODO YOU NEED TO CONFIRM THE USER <----(!)
-        // fetch('/auth/signIn',{
-        //     method: 'POST',
-        //     headers: {
-        //         'Content-Type': 'application/json'
-        //         // 'Content-Type': 'application/x-www-form-urlencoded',
-        //     },
-        //     body: JSON.stringify(userData)
-        // })
-        //     .then(res => res.json()
-        //     )
-        //     .then(data => {
-        //         console.log("JSON res: " + data.data.AuthenticationResult)
-        //         // @ts-ignore
-        //
-        //
-        //         // @ts-ignore
-        //         this.props.setAuthToken(data.data.AuthenticationResult.AccessToken)
-        //         this.props.setIdToken(data.data.AuthenticationResult.IdToken)
-        //         this.props.saveStore()
-        //
-        //         this.props.history.push("/private/area")
-        //         // if(res.ok)
-        //         //     alert("Successfully signed in")
-        //         // else alert("Error, see logs for more info")
-        //
-        //     })
-        //     .catch(error => alert("Fetch error: " + error))
     }
 
     _onChangeUserName = (e: React.ChangeEvent<HTMLInputElement>) => {

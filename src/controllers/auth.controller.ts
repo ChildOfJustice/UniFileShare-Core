@@ -52,21 +52,6 @@ class AuthController {
                     res.status(500).json({"Internal server error": promiseOutput.msg}).end()
                 }
             });
-
-        // var params = {
-        //     GroupName: 'Users', /* required */
-        //     UserPoolId: config.userPoolId, /* required */
-        //     Username: username /* required */
-        //
-        // };
-        // cognitoIdentityServiceProvider.adminAddUserToGroup(params, function(err: any, data: any) {
-        //     if (err) console.log(err, err.stack); // an error occurred
-        //     else     console.log(data);           // successful response
-        // });
-
-        //TODO create a link with Cognito user group
-
-
     }
 
 

@@ -1,8 +1,7 @@
 import * as express from 'express';
-import { Request, Response} from "express";
 import AuthMiddleWare from '../middleware/auth.middleware'
 
-import { CognitoRole } from '../interfaces/databaseTables'
+import { Role } from '../interfaces/databaseTables'
 
 import db from "../models"
 import {User} from "../interfaces/user";
@@ -59,7 +58,8 @@ class UsersdbController {
             name: req.body.username,
             // someReal: req.body.someReal,
             // signUpDate: req.body.signUpDate
-            cognitoUserGroup: req.body.cognitoUserGroup,
+            roleId: req.body.roleId,
+            cognitoUserId: req.body.cognitoUserId,
             signUpDate: req.body.signUpDate
         };
 

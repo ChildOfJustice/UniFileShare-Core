@@ -11,6 +11,10 @@ import {DemoActions} from '../../../store/demo/types';
 import {Table} from "react-bootstrap";
 import {LinkContainer} from "react-router-bootstrap";
 import {Cluster} from "../../../interfaces/databaseTables";
+import * as jwt from "jsonwebtoken";
+import AuthMiddleware from "../../../middleware/auth.middleware";
+import config from "../../../../util/config";
+import * as jwkToPem from "jwk-to-pem";
 
 const mapStateToProps = ({demo}: IRootState) => {
     const {authToken, idToken, loading} = demo;
@@ -31,7 +35,7 @@ type ReduxType = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispa
 interface IState {
     newClusterName: string
     clusters: any
-    password: string
+    userId: string
 }
 
 
@@ -39,7 +43,57 @@ class PersonalPage extends React.Component<ReduxType, IState> {
     public state: IState = {
         newClusterName: "",
         clusters: [],
-        password: '',
+        userId: '',
+    }
+
+    async decodeIdToken(idToken: string) {
+        const URL = `https://cognito-idp.${config.userPoolRegion}.amazonaws.com/${config.userPoolId}/.well-known/jwks.json`
+        const pems: any = {}
+        try{
+            // @ts-ignore
+            const response = await fetch(URL);
+            if (response.status !== 200){
+                throw `request not successful`
+            }
+            const data = await response.json()
+            const { keys } = data
+            for (let index = 0; index < keys.length; index++) {
+                const key = keys[index]
+                const key_id = key.kid
+                const modulus = key.n
+                const exponent = key.e
+                const key_type = key.kty
+                const jwk = { kty: key_type, n: modulus, e: exponent }
+                const pem = jwkToPem(jwk)
+                pems[key_id] = pem
+
+            }
+
+            console.log("got all pems: " + pems.toString())
+        } catch (error) {
+            console.log("cannot get pems")
+            console.log(error)
+        }
+
+
+        //////pems for IDENTITY TOKEN
+        let decodeIDJwt: any = jwt.decode(idToken, {complete: true})
+        //console.log(decodeJwt) some info about user is here!!!
+        if (!decodeIDJwt) {
+            alert("ERROR WITH TOKEN")
+        }
+
+        let kid2 = decodeIDJwt.header.kid
+        let pem2 = pems[kid2]
+        if (!pem2) {
+            alert("ERROR WITH pem2")
+        }
+
+        const decodedIdToken = await jwt.verify(idToken, pem2, {algorithms: ['RS256']});
+
+        //console.log(`Decoded and verified id token from aws ${JSON.stringify(decodedIdToken)}`);
+        // @ts-ignore
+        this.setState({userId: decodedIdToken.sub})
     }
 
     constructor(props: ReduxType) {
@@ -47,9 +101,11 @@ class PersonalPage extends React.Component<ReduxType, IState> {
 
     }
 
-    componentDidMount() {
-        this.props.loadStore()
-        this.getAllUserClusters()
+    async componentDidMount() {
+        await this.props.loadStore()
+
+        await this.decodeIdToken(this.props.idToken)
+        await this.getAllUserClusters()
     }
 
     handleTableClick = () => {
@@ -61,8 +117,7 @@ class PersonalPage extends React.Component<ReduxType, IState> {
         let clusterData: Cluster = {
             clusterId: null,
             name: this.state.newClusterName,
-            ownerUserId: "1",
-            createdDate: Date(),
+            ownerUserId: this.state.userId,
         }
 
         fetch('/clusters/create', {
@@ -78,17 +133,22 @@ class PersonalPage extends React.Component<ReduxType, IState> {
                     console.log(jsonRes)
                 })
 
-                if (res.ok)
+                if (res.ok) {
                     console.log("Successfully created new cluster")
+                    this.getAllUserClusters()
+                }
                 else alert("Error, see logs for more info")
             })
             .catch(error => alert("Fetch error: " + error))
 
-        this.getAllUserClusters()
+
     }
 
     getAllUserClusters = () => {
-        fetch('/clusters/findAll?ownerUserId=1', {
+        if(this.state.userId == ''){
+            return
+        }
+        fetch('/clusters/findAll?ownerUserId='+this.state.userId, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -114,9 +174,12 @@ class PersonalPage extends React.Component<ReduxType, IState> {
 
     //eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     render() {
+
         var counter = 0
         const PersonalPage = (
             <div>
+                USER IS {this.state.userId}!!
+                TEST|{AuthMiddleware.pems_}
                 <Form.Group controlId="formBasicUserName">
                     <Form.Label>UserName</Form.Label>
                     <Form.Control onChange={this._onChangeClusterName} type="string" placeholder="Cluster name"/>
@@ -142,7 +205,7 @@ class PersonalPage extends React.Component<ReduxType, IState> {
                                 <td key={counter}>
                                     {counter++}
                                 </td>
-                                <td key={l.createdDate}>
+                                <td>
                                     {l.name}
                                 </td>
                             </tr>
