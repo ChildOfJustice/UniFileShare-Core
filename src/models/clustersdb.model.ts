@@ -10,12 +10,12 @@ export default function (sequelize:any, Sequelize:any, usersDB:any) {
             autoIncrement: true
         },
         ownerUserId: {
-            type: Sequelize.INTEGER,
+            type: Sequelize.STRING(50),
         }
 
     });
     usersDB.hasMany(clustersDB, { foreignKey: 'ownerUserId' });
-    clustersDB.belongsTo(usersDB, { foreignKey: 'id' });
+    clustersDB.belongsTo(usersDB, { foreignKey: 'cognitoUserId' });
 
     return clustersDB
 }

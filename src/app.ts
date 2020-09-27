@@ -9,9 +9,12 @@ import * as serveFavicon from "serve-favicon";
 import * as cors from "cors"
 
 import db from "./models"
-import {CognitoRole} from "./interfaces/databaseTables";
+import {Role} from "./interfaces/databaseTables";
 import {User} from "./interfaces/user";
+import CognitoService from "./services/cognito.service";
+import config from "../util/config";
 
+const Rolesdb = db.rolesDB
 const Usersdb = db.usersDB;
 const Op = db.SequelizeService.Op;
 
@@ -69,49 +72,72 @@ class App {
         }
     }
 
-    public initRolesForCognitoUserGroups() {
-        //const cognitoRolesdbController = new UsersdbController()
-        // cognitoRolesdbController.create({cognito_user_group: "Admin", role: "ADMINISTRATOR"})
-        // cognitoRolesdbController.create({cognito_user_group: "User", role: "ORDINARY_USER"})
+    async initRoles() {
         try {
-            let cognitoRole1: CognitoRole = {
-                cognito_user_group: "Admin",
+            let role1: Role = {
                 role: "ADMINISTRATOR"
             }
-
-            // let cognitoRole2: CognitoRole = {
-            //     cognito_user_group: "User",
-            //     role: "ORDINARY_USER"
-            // }
-
+            await Rolesdb.create(role1)
+                .then((data: never) => {
+                    console.log("CREATED NEW ROLE: " + data)
+                })
+                .catch((err: { message: string; }) => {
+                    console.log(err)
+                });
+            let role2: Role = {
+                role: "ORDINARY_USER"
+            }
+            await Rolesdb.create(role2)
+                .then((data: never) => {
+                    console.log("CREATED NEW ROLE: " + data)
+                })
+                .catch((err: { message: string; }) => {
+                    console.log(err)
+                });
 
         } catch (error) {
             console.error('Unable to connect to the database (2): ', error);
         }
     }
 
-    initAdministratorUser() {
+    async initAdministratorUser() {
+        var userCognitoId: string | null = null
+        const { username, password, email} = config.AdminConfig;
+        const userAttr = [];
+        userAttr.push({ Name: 'email', Value: email });
+        const cognito = new CognitoService();
+
+        const cognitoIdentityServiceProvider = cognito.cognitoIdentity;
+
+        await cognito.signUpUser(username, password, userAttr)
+            .then(promiseOutput =>{
+                if(promiseOutput.success){
+                    console.log("CREATED ROOT USER: " + promiseOutput.msg)
+                    // @ts-ignore
+                    userCognitoId = promiseOutput.msg.UserSub
+                } else {
+                    console.log("ERROR WITH ROOT USER: " + promiseOutput.msg)
+                }
+            });
+
+
+        if(userCognitoId == null){
+            console.log("ERROR WITH COGNITO")
+            return
+        }
         const note: User = {
-            name: "ADMIN",
-            // someReal: req.body.someReal,
-            // signUpDate: req.body.signUpDate
-            cognitoUserGroup: "1",
+            name: username,
+            cognitoUserId: userCognitoId,
+            roleId: config.AppConfig.RolesIds.admin,
             signUpDate: Date()
         };
 
-
-        // Save Tutorial in the database
-        Usersdb.create(note)
+        await Usersdb.create(note)
             .then((data: never) => {
-                //res.send(JSON.stringify(data));
-                console.log("CREATED NEW USER: " + data)
-                //res.send(data);
+                console.log("CREATED ROOT USER in inner db: " + data)
             })
             .catch((err: { message: string; }) => {
-                console.log(err)
-                // res.status(500).send({
-                //     message: err.message || "Some error occurred while creating the note."
-                // });
+                console.log("ERROR WITH ADMIN IN INNER DB!!" + err)
             });
     }
 
@@ -126,9 +152,10 @@ class App {
         this.app.listen(this.port, async () => {
             await this.connectToDatabase()
 
-            await this.sleep(4000)
+            await this.sleep(5000)
             console.log("DATABASE INITIALISATION:")
-            this.initAdministratorUser()
+            await this.initRoles()
+            await this.initAdministratorUser()
 
 
             console.log(`App is listening on http://localhost:${this.port}`);

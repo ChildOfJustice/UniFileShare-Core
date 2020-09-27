@@ -2,7 +2,7 @@ import * as express from 'express';
 import { Request, Response} from "express";
 import AuthMiddleWare from '../middleware/auth.middleware'
 
-import {Cluster, CognitoRole} from '../interfaces/databaseTables'
+import {Cluster, Role} from '../interfaces/databaseTables'
 
 import db from "../models"
 
@@ -56,18 +56,14 @@ class ClustersdbController {
         // Create a note
         const note: Cluster = {
             clusterId: null,
-            // username: req.body.username,
-            // someReal: req.body.someReal,
+            //createdDate: req.body.createdDate,
             name: req.body.name,
             ownerUserId: req.body.ownerUserId,
-            createdDate: Date()
         };
 
 
-        // Save Tutorial in the database
         Clustersdb.create(note)
             .then((data: never) => {
-                //res.send(JSON.stringify(data));
                 console.log("CREATED NEW CLUSTER: " + data)
                 res.send(data);
             })
@@ -85,7 +81,9 @@ class ClustersdbController {
         //https://sequelize.org/v5/manual/querying.html
         const ownerUserId = req.query.ownerUserId;
         const condition = ownerUserId ? {
-            ownerUserId: ownerUserId
+            ownerUserId: {
+                [Op.like]: '%' + ownerUserId + '%'
+            }
         } : null;
 
         Clustersdb.findAll({ where: condition })

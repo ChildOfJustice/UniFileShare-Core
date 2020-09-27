@@ -2,11 +2,11 @@ import * as express from 'express';
 import { Request, Response} from "express";
 import AuthMiddleWare from '../middleware/auth.middleware'
 
-import { CognitoRole } from '../interfaces/databaseTables'
+import { Role } from '../interfaces/databaseTables'
 
 import db from "../models"
 
-const CognitoRolesdb = db.cognitoRolesDB;
+const Rolesdb = db.rolesDB;
 const Op = db.SequelizeService.Op;
 
 class CognitoRolesdbController {
@@ -78,17 +78,13 @@ class CognitoRolesdbController {
 
 
         // Create a note
-        const note: CognitoRole = {
-            // username: req.body.username,
-            // someReal: req.body.someReal,
-            // signUpDate: req.body.signUpDate
-            cognito_user_group: req.body.cognito_user_group,
+        const note: Role = {
             role: req.body.role
         };
 
 
         // Save Tutorial in the database
-        CognitoRolesdb.create(note)
+        Rolesdb.create(note)
             .then((data: never) => {
                 //res.send(JSON.stringify(data));
                 console.log("CREATED NEW Cognito Role: " + data)
@@ -111,7 +107,7 @@ class CognitoRolesdbController {
         //     }
         // } : null;
 
-        CognitoRolesdb.findAll({ where: null })
+        Rolesdb.findAll({ where: null })
             .then((data: any) => {
                 console.log("data: " + data)
                 res.send(data);
@@ -127,7 +123,7 @@ class CognitoRolesdbController {
     findOne (req: any, res: any) {
         const id = req.params.id;
 
-        CognitoRolesdb.findByPk(id)
+        Rolesdb.findByPk(id)
             .then((data: any) => {
                 res.send(data);
             })

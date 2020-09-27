@@ -17,7 +17,6 @@
     "start-dev": "nodemon --config \"./util/nodemon.json\"/",
     "build": "rm -rf ./build/* && tsc --build tsconfig.json && webpack --config src/webpack.config.js",
     "start": "node build/src/index.js",
-    "lint": "eslint . -c src/.eslintrc.js --ext \"tsx,ts\"",
     "watch": "webpack --config src/webpack.config.js --watch"
   },
   "dependencies": {

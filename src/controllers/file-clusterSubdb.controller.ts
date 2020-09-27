@@ -1,8 +1,7 @@
 import * as express from 'express';
-import { Request, Response} from "express";
 import AuthMiddleWare from '../middleware/auth.middleware'
 
-import {CognitoRole, File_ClusterSub} from '../interfaces/databaseTables'
+import {Role, File_ClusterSub} from '../interfaces/databaseTables'
 
 import db from "../models"
 

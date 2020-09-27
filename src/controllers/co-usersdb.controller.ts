@@ -2,7 +2,7 @@ import * as express from 'express';
 import { Request, Response} from "express";
 import AuthMiddleWare from '../middleware/auth.middleware'
 
-import { CognitoRole } from '../interfaces/databaseTables'
+import { Role } from '../interfaces/databaseTables'
 
 import db from "../models"
 
@@ -54,11 +54,7 @@ class CousersdbController {
 
 
         // Create a note
-        const note: CognitoRole = {
-            // username: req.body.username,
-            // someReal: req.body.someReal,
-            // signUpDate: req.body.signUpDate
-            cognito_user_group: req.body.cognito_user_group,
+        const note: Role = {
             role: req.body.role
         };
 

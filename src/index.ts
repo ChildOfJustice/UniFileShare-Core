@@ -7,7 +7,7 @@ import AuthController from "./controllers/auth.controller";
 import HomeController from './controllers/home.controller';
 import ProtectedController from "./controllers/protected.controller";
 import FilesMetadataController from "./controllers/filesMetadatadb.controller";
-import CognitoRolesdbController from "./controllers/cognitoRolesdb.controller";
+import RolesdbController from "./controllers/rolesdb.controller";
 import ClustersdbController from "./controllers/clustersdb.controller";
 import CousersdbController from "./controllers/co-usersdb.controller";
 import File_ClusterdbController from "./controllers/file-clusterSubdb.controller";
@@ -20,7 +20,7 @@ const app = new App({
         new HomeController(),
         new AuthController(),
         new FilesMetadataController(),
-        new CognitoRolesdbController(),
+        new RolesdbController(),
         new ClustersdbController(),
         new CousersdbController(),
         new File_ClusterdbController(),

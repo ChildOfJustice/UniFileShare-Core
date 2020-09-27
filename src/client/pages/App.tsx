@@ -13,7 +13,6 @@ import Test from "./Test"
 import UploadFile from "./private/UploadFile";
 import PersonalPage from "./private/PersonalPage";
 import ClusterOverview from "./private/ClusterOverview";
-import {CognitoRole} from "../../interfaces/databaseTables";
 
 class App extends React.Component {
 

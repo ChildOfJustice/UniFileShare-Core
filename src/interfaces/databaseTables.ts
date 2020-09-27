@@ -18,10 +18,9 @@ export interface Cluster {
     clusterId: number | null
     name: string
     ownerUserId: string
-    createdDate: string
+    // createdDate: string
 }
 
-export interface CognitoRole {
-    cognito_user_group: string
+export interface Role {
     role: string
 }

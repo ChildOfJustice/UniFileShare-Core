@@ -9,8 +9,8 @@ const pems: any = {}
 const pems2: any= {}
 
 class AuthMiddleware{
-    public pems_: any
-    public pems2_: any
+    public static pems_: any
+    public static pems2_: any
 
 
     private userPoolId = config.userPoolId
@@ -18,8 +18,6 @@ class AuthMiddleware{
 
     constructor() {
         this.setUp()
-        this.pems_ = pems
-        this.pems2_ = pems2
     }
 
     // async getKey(kidId: any) {
@@ -128,7 +126,9 @@ class AuthMiddleware{
 
             }
 
-            console.log("got all pems: " + this.pems_.toString())
+            AuthMiddleware.pems_ = pems
+            AuthMiddleware.pems2_ = pems2
+            console.log("got all pems: " + AuthMiddleware.pems_.toString())
         } catch (error) {
             console.log("cannot get pems")
             console.log(error)

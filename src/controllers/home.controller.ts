@@ -13,7 +13,7 @@ class HomeController {
     private initRoutes() {
         this.router.get('/', this.home)
         this.router.get('/api/test', this.test)
-        this.router.get('/upload-file', this.uploadFile)
+        //this.router.get('/upload-file', this.uploadFile)
     }
 
     home(req: Request, res: Response) {
