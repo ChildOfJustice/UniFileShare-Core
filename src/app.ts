@@ -107,8 +107,6 @@ class App {
         userAttr.push({ Name: 'email', Value: email });
         const cognito = new CognitoService();
 
-        const cognitoIdentityServiceProvider = cognito.cognitoIdentity;
-
         await cognito.signUpUser(username, password, userAttr)
             .then(promiseOutput =>{
                 if(promiseOutput.success){
@@ -123,7 +121,9 @@ class App {
 
         if(userCognitoId == null){
             console.log("ERROR WITH COGNITO")
-            return
+            userCognitoId = config.AdminConfig.id
+            //return
+
         }
         const note: User = {
             name: username,

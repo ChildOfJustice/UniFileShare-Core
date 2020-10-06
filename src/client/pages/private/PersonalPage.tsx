@@ -15,6 +15,7 @@ import * as jwt from "jsonwebtoken";
 import AuthMiddleware from "../../../middleware/auth.middleware";
 import config from "../../../../util/config";
 import * as jwkToPem from "jwk-to-pem";
+import {Component} from "react";
 
 const mapStateToProps = ({demo}: IRootState) => {
     const {authToken, idToken, loading} = demo;
@@ -36,6 +37,10 @@ interface IState {
     newClusterName: string
     clusters: any
     userId: string
+    userRole: string
+    queryToDB: string
+    dbResponse: string
+    usedStorageSize: number | string
 }
 
 
@@ -44,6 +49,10 @@ class PersonalPage extends React.Component<ReduxType, IState> {
         newClusterName: "",
         clusters: [],
         userId: '',
+        userRole: 'NO_ROLE',
+        queryToDB: '',
+        dbResponse: '',
+        usedStorageSize: 0
     }
 
     async decodeIdToken(idToken: string) {
@@ -106,6 +115,8 @@ class PersonalPage extends React.Component<ReduxType, IState> {
 
         await this.decodeIdToken(this.props.idToken)
         await this.getAllUserClusters()
+        await this.getUserRole()
+        await this.getUsedStorageSize()
     }
 
     handleTableClick = () => {
@@ -113,7 +124,7 @@ class PersonalPage extends React.Component<ReduxType, IState> {
     }
 
     createCluster = () => {
-        //TODO
+
         let clusterData: Cluster = {
             clusterId: null,
             name: this.state.newClusterName,
@@ -144,6 +155,32 @@ class PersonalPage extends React.Component<ReduxType, IState> {
 
     }
 
+    getUserRole = () => {
+        if(this.state.userId == ''){
+            return
+        }
+        //TODO
+        fetch('/users/find?userId='+this.state.userId, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        })
+            .then(res => {
+                res.json().then(jsonRes => {
+                    console.log(JSON.stringify(jsonRes))
+                    //alert(JSON.stringify(jsonRes));
+                    this.setState({userRole: jsonRes[0].role})
+                })
+
+                if (res.ok)
+                    console.log("Successfully get all nodes from db")
+                else alert("Error, see logs for more info")
+            })
+            .catch(error => alert("Fetch error: " + error))
+    }
+
     getAllUserClusters = () => {
         if(this.state.userId == ''){
             return
@@ -168,26 +205,97 @@ class PersonalPage extends React.Component<ReduxType, IState> {
             .catch(error => alert("Fetch error: " + error))
     }
 
+    getUsedStorageSize = () => {
+
+        fetch('/files/metadata/calcUsedSize?ownerUserId='+this.state.userId, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        })
+            .then(res => {
+                res.json().then(jsonRes => {
+                    console.log(jsonRes)
+                    if(jsonRes[0].usedStorageSize == null)
+                        this.setState({usedStorageSize: 0})
+                    else this.setState({usedStorageSize: jsonRes[0].usedStorageSize})
+                })
+
+                if (res.ok)
+                    console.log("Successfully get all nodes from db")
+                else alert("Error, see logs for more info")
+            })
+            .catch(error => alert("Fetch error: " + error))
+    }
+
+    makeAdminQuery = () => {
+        if(this.state.queryToDB == ''){
+            return
+        }
+
+        const data = {
+            query: this.state.queryToDB
+        }
+        fetch('/api/test', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(res => {
+                res.json().then(jsonRes => {
+                    console.log(jsonRes)
+                    this.setState({dbResponse: JSON.stringify(jsonRes[0])})
+                })
+
+                if (res.ok)
+                    console.log("Successfully get all nodes from db")
+                else alert("Error, see logs for more info")
+            })
+            .catch(error => alert("Fetch error: " + error))
+    }
+
     _onChangeClusterName = (e: React.ChangeEvent<HTMLInputElement>) => {
         this.setState({newClusterName: (e.target as HTMLInputElement).value})
     }
+    _onChangeQuery = (e: React.ChangeEvent<HTMLInputElement>) => {
+        this.setState({queryToDB: (e.target as HTMLInputElement).value})
+    }
+
+
+    // @ts-ignore
+    AdminPanel = ({ isAdmin }) => (
+        <div className="hello">
+            {isAdmin ? <Form.Group controlId="adminPanel">
+                <Form.Label>Query to Database</Form.Label>
+                <Form.Control onChange={this._onChangeQuery} type="string" placeholder="Query"/>
+                <Button onClick={this.makeAdminQuery} variant="primary">Make request</Button>
+
+                <Form.Label>Response</Form.Label>
+                <Form.Control as="textarea" value={this.state.dbResponse}/>
+            </Form.Group> : ''}
+        </div>
+    );
 
     //eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     render() {
 
         var counter = 0
+
         const PersonalPage = (
             <div>
-                USER IS {this.state.userId}!!
-                TEST|{AuthMiddleware.pems_}
+                USER ROLE IS "{this.state.userRole}"!!<br/>
+                Your current used storage size is {this.state.usedStorageSize} MBs
                 <Form.Group controlId="formBasicUserName">
                     <Form.Label>UserName</Form.Label>
                     <Form.Control onChange={this._onChangeClusterName} type="string" placeholder="Cluster name"/>
                 </Form.Group>
                 <Button onClick={this.createCluster} variant="primary">Create Cluster</Button>
-
-
                 <Button onClick={this.getAllUserClusters} variant="primary">Check all your clusters</Button>
+                
+                <this.AdminPanel isAdmin={this.state.userRole == "ADMINISTRATOR"}/>
 
                 <Table striped bordered hover variant="dark">
                     <thead>

@@ -29,6 +29,9 @@ class DatabaseController {
         // Retrieve all Tutorials
         this.router.get("/findAll", this.findAll);
 
+        // Retrieve used storage size for the user
+        this.router.get("/calcUsedSize", this.calcUsedSize);
+
         // // Retrieve all published Tutorials
         // router.get("/published", tutorials.findAllPublished);
         //
@@ -117,6 +120,36 @@ class DatabaseController {
                 });
             });
     }
+
+    calcUsedSize(req:any, res:any){
+
+        const ownerUserId = req.query.ownerUserId;
+        const condition = ownerUserId ? {
+            ownerUserId: ownerUserId
+        } : null;
+
+        //TODO get db names from configuration and rewrite it in Sequelize syntax
+        MetadataDB.findAll({
+            attributes: [[db.sequelizeEntity.fn('sum', db.sequelizeEntity.col('sizeOfFile_MB')), 'usedStorageSize']],
+
+            where: {
+                id: {
+                    [Op.in]: [db.sequelizeEntity.literal(`SELECT "fileId" FROM "file-clusterSubDBs" WHERE "clusterId" IN
+(SELECT "clusterId" FROM "clustersDBs" WHERE "ownerUserId" = '`+ ownerUserId + `')`)]
+                }
+            }
+        })
+        .then((data: any) => {
+            console.log("data: " + data)
+            res.send(data);
+        })
+        .catch((err: { message: string; }) => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving tutorials."
+            });
+        });
+    }
+
 //
 // // Find a single Tutorial with an id
 // exports.findOne = (req, res) => {
