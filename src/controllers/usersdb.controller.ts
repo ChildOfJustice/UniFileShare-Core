@@ -33,7 +33,7 @@ class UsersdbController {
         // router.get("/published", tutorials.findAllPublished);
         //
         // // Retrieve a single Tutorial with id
-        this.router.get("/:id", this.findOne);
+        this.router.get("/find", this.findOne);
         //
         // // Update a Tutorial with id
         // router.put("/:id", tutorials.update);
@@ -102,19 +102,57 @@ class UsersdbController {
             });
     }
 //
-// // Find a single Tutorial with an id
+// // Find a single User with an id
     findOne (req: any, res: any) {
-        const id = req.params.id;
+        const id = req.query.userId;
+        const condition = id ? {
+            cognitoUserId: id
+        } : null;
 
-        Usersdb.findByPk(id)
-            .then((data: any) => {
-                res.send(data);
-            })
-            .catch((err: any) => {
+        db.rolesDB.findAll({
+            attributes: ['role'],
+            include: [{
+                model: Usersdb,
+                attributes: ['name'],
+                where: condition
+            }]
+        }).then((data: any) => {
+            console.log("data: " + data)
+            res.send(data);
+        })
+            .catch((err: { message: string; }) => {
                 res.status(500).send({
-                    message: "Error retrieving Tutorial with id=" + id + ": " + err
+                    message: err.message || "Some error occurred while retrieving user role."
                 });
             });
+
+
+        // Usersdb.findAll({
+        //     where: condition,
+        //     attributes: ['name', 'roleId'],
+        //     include: [{
+        //         model: db.rolesDB,
+        //         //attributes: []
+        //     }]
+        // }).then((data: any) => {
+        //         console.log("data: " + data)
+        //         res.send(data);
+        //     })
+        //     .catch((err: { message: string; }) => {
+        //         res.status(500).send({
+        //             message: err.message || "Some error occurred while retrieving user role."
+        //         });
+        //     });
+
+        // Usersdb.findByPk(id)
+        //     .then((data: any) => {
+        //         res.send(data);
+        //     })
+        //     .catch((err: any) => {
+        //         res.status(500).send({
+        //             message: "Error retrieving User with id=" + id + ": " + err
+        //         });
+        //     });
     };
 //
 // // Update a Tutorial by the id in the request

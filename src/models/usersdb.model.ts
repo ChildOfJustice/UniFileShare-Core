@@ -11,7 +11,6 @@ export default function (sequelize:any, Sequelize:any, rolesDB:any) {
         },
         roleId: {
             type: Sequelize.INTEGER,
-            unique: true
         },
         signUpDate: {
             type: Sequelize.DATE
@@ -19,7 +18,7 @@ export default function (sequelize:any, Sequelize:any, rolesDB:any) {
 
     });
     rolesDB.hasMany(usersDB, { foreignKey: 'roleId' });
-    usersDB.belongsTo(rolesDB, { foreignKey: 'id' });
+    usersDB.belongsTo(rolesDB, { foreignKey: 'roleId' });
 
     return usersDB
 }
