@@ -13,6 +13,7 @@ import Test from "./Test"
 import UploadFile from "./private/UploadFile";
 import PersonalPage from "./private/PersonalPage";
 import ClusterOverview from "./private/ClusterOverview";
+import SharedWithMeClusters from "./private/SharedWithMeClusters";
 
 class App extends React.Component {
 
@@ -79,6 +80,7 @@ class App extends React.Component {
                         <Route exact path='/' component={Home}/>
                         <Route exact path='/private/clusters/:clusterId' component={ClusterOverview}/>
                         <Route path='/private/area' component={PersonalPage}/>
+                        <Route path='/private/sharedWithMeClusters' component={SharedWithMeClusters}/>
                         <Route path='/private/uploadFile/:clusterId' component={UploadFile}/>
                         <Route path='/signIn' component={SignIn} />
                         <Route path='/signUp' component={SignUp}/>

@@ -2,7 +2,7 @@ import * as express from 'express';
 import { Request, Response} from "express";
 import AuthMiddleWare from '../middleware/auth.middleware'
 
-import { Role } from '../interfaces/databaseTables'
+import {CoUser, Role} from '../interfaces/databaseTables'
 
 import db from "../models"
 
@@ -29,6 +29,8 @@ class CousersdbController {
         // Retrieve all Tutorials
         this.router.get("/findAll", this.findAll);
 
+        this.router.get("/getPermissions", this.getPermissions);
+
         // // Retrieve all published Tutorials
         // router.get("/published", tutorials.findAllPublished);
         //
@@ -54,8 +56,11 @@ class CousersdbController {
 
 
         // Create a note
-        const note: Role = {
-            role: req.body.role
+        const note: CoUser = {
+            coUserId: req.body.coUserId,
+            clusterId: req.body.clusterId,
+            permissions: req.body.permissions,
+            permissionGiverUserId: req.body.userId
         };
 
 
@@ -73,14 +78,35 @@ class CousersdbController {
             });
     }
 
-    // Retrieve all notes from the database.
-    //We use req.query.title to get query string from the Request and consider it as condition for findAll() method.
     findAll (req:any, res:any){
-        const ownedBy = req.query.ownedBy;
-        const condition = ownedBy ? {
-            username: {
-                [Op.iLike]: `%${ownedBy}%`
+        //retrieve all clusters, associated with this user
+        const userId = req.query.userId;
+        const condition = userId ? {
+            coUserId: {
+                [Op.iLike]: `%${userId}%`
             }
+        } : null;
+
+        Cousersdb.findAll({ where: condition })
+            .then((data: any) => {
+                console.log("data: " + data)
+                res.send(data);
+            })
+            .catch((err: { message: string; }) => {
+                res.status(500).send({
+                    message: err.message || "Some error occurred while retrieving tutorials."
+                });
+            });
+    }
+    getPermissions(req: any, res: any){
+        //retrieve permissions for the user
+        const userId = req.query.userId;
+        const clusterId = req.query.clusterId;
+        const condition = userId ? {
+            coUserId: {
+                [Op.iLike]: `%${userId}%`
+            },
+            clusterId: clusterId
         } : null;
 
         Cousersdb.findAll({ where: condition })

@@ -24,3 +24,10 @@ export interface Cluster {
 export interface Role {
     role: string
 }
+
+export interface CoUser {
+    coUserId: string
+    clusterId: number
+    permissions: string
+    permissionGiverUserId: string
+}

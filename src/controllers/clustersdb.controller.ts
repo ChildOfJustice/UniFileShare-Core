@@ -33,7 +33,7 @@ class ClustersdbController {
         // router.get("/published", tutorials.findAllPublished);
         //
         // // Retrieve a single Tutorial with id
-        this.router.get("/:id", this.findOne);
+        this.router.get("/", this.findOne);
         //
         // // Update a Tutorial with id
         // router.put("/:id", tutorials.update);
@@ -98,19 +98,25 @@ class ClustersdbController {
             });
     }
 //
-// // Find a single Tutorial with an id
+// // Find a single cluster with an id
     findOne (req: any, res: any) {
-        const id = req.params.id;
+        const id = req.query.clusterId;
 
-        Clustersdb.findByPk(id)
+        const condition = id ? {
+            clusterId: id
+        } : null;
+
+        Clustersdb.findAll({ where: condition })
             .then((data: any) => {
+                console.log("data: " + data)
                 res.send(data);
             })
-            .catch((err: any) => {
+            .catch((err: { message: string; }) => {
                 res.status(500).send({
-                    message: "Error retrieving Tutorial with id=" + id + ": " + err
+                    message: err.message || "Some error occurred while retrieving tutorials."
                 });
             });
+        console.log("REQUEST HANDLED")
     };
 //
 // // Update a Tutorial by the id in the request

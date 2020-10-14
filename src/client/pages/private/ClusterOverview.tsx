@@ -19,9 +19,10 @@ import { DemoActions } from '../../../store/demo/types';
 import {NavItem, Table} from "react-bootstrap";
 import {LinkContainer} from "react-router-bootstrap";
 import Navbar from "react-bootstrap/Navbar";
-import {Cluster, FileMetadata} from "../../../interfaces/databaseTables";
+import {Cluster, CoUser, FileMetadata} from "../../../interfaces/databaseTables";
 import * as AWS from "aws-sdk";
 import config from "../../../../util/config";
+import {decodeIdToken} from "../../../interfaces/user";
 
 
 //to use any action you need to add dispatch as an argument to a function!!
@@ -33,6 +34,13 @@ const mapDispatcherToProps = (dispatch: Dispatch<DemoActions>) => {
 
 interface IState {
     files: FileMetadata[]
+    coUserId: string
+    userId: string
+    downloadPermissionCheckboxChecked: boolean
+    uploadPermissionCheckboxChecked: boolean
+    deletePermissionCheckboxChecked: boolean
+    canGivePermissionsToOthersCheckboxChecked: boolean
+    permissions: string
 }
 interface IProps {
     clusterId: string
@@ -45,22 +53,40 @@ type ReduxType = IProps & ReturnType<typeof mapStateToProps> & ReturnType<typeof
 class ClusterOverview extends React.Component<ReduxType, IState> {
     public state: IState = {
         files: [],
+        coUserId: "",
+        userId: "",
+        downloadPermissionCheckboxChecked: false,
+        uploadPermissionCheckboxChecked: false,
+        deletePermissionCheckboxChecked: false,
+        canGivePermissionsToOthersCheckboxChecked: false,
+        permissions: "0000"
     }
 
 
     constructor(props: ReduxType) {
         super(props);
+
+
+
     }
 
-    componentDidMount() {
+    async componentDidMount() {
         // @ts-ignore
         this.loadFilesMetadata(this.props.match.params.clusterId)
 
         // @ts-ignore
         //alert("!!!!=> " + this.props.match.params.clusterId)
-        this.props.loadStore()
+        await this.props.loadStore()
+        await decodeIdToken(this.props.idToken).then(userid => this.setState({userId: userid}))
+        // @ts-ignore
+        this.getCurrentUserPermissions()
+
     }
+
+
+
     downloadFile = (fileName:string, cloud:string) => {
+        console.log("TRYING TO DOWNLOAD FILE WITH " + this.state.permissions + " perms")
         if (cloud == 'AWS'){
 
             AWS.config.update({
@@ -173,15 +199,168 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
             .catch(error => alert("Fetch error: " + error))
     }
 
-    render() {
 
-        var counter = 1
-        return (
-            <div>
+    getCurrentUserPermissions = () => {
+        if(this.state.userId == ''){
+            return
+        }
+
+        let gotPerms = false
+
+        // @ts-ignore
+        fetch('/clusters/?clusterId='+this.props.match.params.clusterId, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        })
+            .then(res => {
+                res.json().then(jsonRes => {
+                    console.log(jsonRes)
+                    if(jsonRes[0].ownerUserId == this.state.userId){
+                        this.setState({permissions: "1111"})
+                        gotPerms = true
+                    }
+                })
+
+                if (res.ok)
+                    console.log("Successfully get all nodes from db")
+                else alert("Error, see logs for more info")
+            })
+            .catch(error => alert("Fetch error: " + error))
+
+        if(!gotPerms) {
+            // @ts-ignore
+            fetch('/cousers/getPermissions?userId=' + this.state.userId + '&clusterId=' + this.props.match.params.clusterId, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                    // 'Content-Type': 'application/x-www-form-urlencoded',
+                }
+            })
+                .then(res => {
+                    res.json().then(jsonRes => {
+                        console.log(jsonRes)
+                        this.setState({permissions: jsonRes[0].permissions})
+                    })
+
+                    if (res.ok)
+                        console.log("Successfully get all nodes from db")
+                    else alert("Error, see logs for more info")
+                })
+                .catch(error => alert("Fetch error: " + error))
+        }
+    }
+    shareCluster = () => {
+        const downloadPerm = this.state.downloadPermissionCheckboxChecked ? 1 : 0;
+        const uploadPerm = this.state.uploadPermissionCheckboxChecked ? 1 : 0;
+        const deletePerm = this.state.deletePermissionCheckboxChecked ? 1 : 0;
+        const canGivePermissionsToOthers = this.state.canGivePermissionsToOthersCheckboxChecked ? 1 : 0;
+        const permissions = "" + downloadPerm + uploadPerm + deletePerm + canGivePermissionsToOthers
+        let coUserData: CoUser = {
+            // @ts-ignore
+            clusterId: this.props.match.params.clusterId,
+            permissionGiverUserId: this.state.userId,
+            coUserId: this.state.coUserId,
+            permissions: permissions,
+        }
+
+        fetch('/cousers/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: JSON.stringify(coUserData)
+        })
+            .then(res => {
+                res.json().then(jsonRes => {
+                    console.log(jsonRes)
+                })
+
+                if (res.ok) {
+                    console.log("Successfully created new coUser")
+                }
+                else alert("Error, see logs for more info")
+            })
+            .catch(error => alert("Fetch error: " + error))
+    }
+
+    _onChangeCoUserId = (e: React.ChangeEvent<HTMLInputElement>) => {
+        this.setState({coUserId: (e.target as HTMLInputElement).value})
+    }
+    handleDownloadPermissionChange = (evt: any) => {
+        this.setState({ downloadPermissionCheckboxChecked: evt.target.checked });
+    }
+    handleUploadPermissionChange = (evt: any) => {
+        this.setState({ uploadPermissionCheckboxChecked: evt.target.checked });
+    }
+    handleDeletePermissionChange = (evt: any) => {
+        this.setState({ deletePermissionCheckboxChecked: evt.target.checked });
+    }
+    handleCanGivePermissionsToOthersChange = (evt: any) => {
+        this.setState({ canGivePermissionsToOthersCheckboxChecked: evt.target.checked });
+    }
+
+    // @ts-ignore
+    SharePanel = () => (
+        <div className="hello">
+            {(this.state.permissions[3] == '1') ?
+                <Form.Group controlId="formBasicUserName">
+                    <Form.Label>Share this cluster</Form.Label>
+                    <Form.Label>User to share with</Form.Label>
+                    <Form.Control onChange={this._onChangeCoUserId} type="string" placeholder="User Id"/>
+                    <Form.Label>Permissions for the user</Form.Label>
+                    <Form.Check
+                        type={"checkbox"}
+                        label={"Download"}
+                        onChange={this.handleDownloadPermissionChange}
+                    />
+                    <Form.Check
+                        type={"checkbox"}
+                        onChange={this.handleUploadPermissionChange}
+                        label={"Upload"}
+                    />
+                    <Form.Check
+                        type={"checkbox"}
+                        onChange={this.handleDeletePermissionChange}
+                        label={"Delete"}
+                    />
+                    <Form.Check
+                        type={"checkbox"}
+                        onChange={this.handleCanGivePermissionsToOthersChange}
+                        label={"Can give permissions to others"}
+                    />
+                    <Button onClick={this.shareCluster} variant="primary">Share Cluster</Button>
+                </Form.Group>
+                : ''}
+        </div>
+    );
+
+    // @ts-ignore
+    UploadPanel = ({ canUpload }) => (
+        <div className="hello">
+            {canUpload ?
                 <LinkContainer to={// @ts-ignore
                     "/private/uploadFile/" + this.props.match.params.clusterId}>
                     <Navbar.Brand>Upload file</Navbar.Brand>
                 </LinkContainer>
+                : ''}
+        </div>
+    );
+
+    render() {
+
+        var counter = 1
+        var canUpload_ = this.state.permissions[1] == "1"
+        return (
+            <div>
+                permission are: {this.state.permissions}<br/>
+                <this.UploadPanel canUpload={canUpload_}/>
+                <br/>
+
+                <this.SharePanel/>
 
                 <Table striped bordered hover variant="dark">
                     <thead>
