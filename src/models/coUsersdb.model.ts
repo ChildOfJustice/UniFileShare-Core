@@ -1,16 +1,19 @@
 export default function (sequelize:any, Sequelize:any, usersDB:any, clustersDB:any) {
     const coUsersDB = sequelize.define("coUsersDB", {
         //Sequelize types: https://sequelize.org/v5/manual/data-types.html
-        co_userId: {
+        coUserId: {
             type: Sequelize.STRING(50),
             primaryKey: true
+        },
+        permissionGiverUserId: {
+            type: Sequelize.STRING(50)
         },
         clusterId: {
             type: Sequelize.INTEGER(11),
             primaryKey: true
         },
         permissions: {
-            type: Sequelize.INTEGER,
+            type: Sequelize.STRING(50),
         }
 
     });
@@ -18,7 +21,7 @@ export default function (sequelize:any, Sequelize:any, usersDB:any, clustersDB:a
     clustersDB.hasMany(coUsersDB, { foreignKey: 'clusterId' });
 
     coUsersDB.belongsTo(usersDB, {foreignKey: 'cognitoUserId'});
-    usersDB.hasMany(coUsersDB, { foreignKey: 'co_userId' });
+    usersDB.hasMany(coUsersDB, { foreignKey: 'coUserId' });
 
     return coUsersDB
 }

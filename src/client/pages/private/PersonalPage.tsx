@@ -103,8 +103,6 @@ class PersonalPage extends React.Component<ReduxType, IState> {
                 else alert("Error, see logs for more info")
             })
             .catch(error => alert("Fetch error: " + error))
-
-
     }
 
     getUserRole = () => {
@@ -238,16 +236,24 @@ class PersonalPage extends React.Component<ReduxType, IState> {
 
         const PersonalPage = (
             <div>
-                USER ROLE IS "{this.state.userRole}"!!<br/>
-                Your current used storage size is {this.state.usedStorageSize} MBs
+                Your user id is: "{this.state.userId}".<br/>
+                Your role is: "{this.state.userRole}".<br/>
+                Your current used storage size is {this.state.usedStorageSize} MB.
+
                 <Form.Group controlId="formBasicUserName">
-                    <Form.Label>UserName</Form.Label>
+                    <Form.Label>Cluster Name</Form.Label>
                     <Form.Control onChange={this._onChangeClusterName} type="string" placeholder="Cluster name"/>
                 </Form.Group>
                 <Button onClick={this.createCluster} variant="primary">Create Cluster</Button>
-                <Button onClick={this.getAllUserClusters} variant="primary">Check all your clusters</Button>
+
+                <Button onClick={this.getAllUserClusters} variant="primary">Update clusters</Button>
                 
                 <this.AdminPanel isAdmin={this.state.userRole == "ADMINISTRATOR"}/>
+
+                <br/>
+                <LinkContainer to="/private/sharedWithMeClusters">
+                    <Button variant="primary">Shared with me</Button>
+                </LinkContainer>
 
                 <Table striped bordered hover variant="dark">
                     <thead>
