@@ -40,6 +40,7 @@ class ClustersdbController {
         //
         // // Delete a Tutorial with id
         // router.delete("/:id", tutorials.delete);
+        this.router.delete("/delete", this.delete);
         //
         // // Create a new Tutorial
         // router.delete("/", tutorials.deleteAll);
@@ -145,29 +146,28 @@ class ClustersdbController {
 // };
 //
 // // Delete a Tutorial with the specified id in the request
-// exports.delete = (req, res) => {
-//     const id = req.params.id;
+    delete(req: any, res: any) {
+        Clustersdb.destroy({
+            where: { clusterId: req.query.clusterId}
+        })
+            .then((num: number) => {
+                if (num == 1) {
+                    res.send({
+                        message: `cluster ${req.query.clusterId} was deleted successfully!`
+                    });
+                } else {
+                    res.send({
+                        message: `Cannot delete cluster ${req.query.clusterId}. Maybe it was not found!`
+                    });
+                }
+            })
+            .catch((err: any) => {
+                res.status(500).send({
+                    message: err
+                });
+            });
+    };
 //
-//     Tutorial.destroy({
-//         where: { id: id }
-//     })
-//         .then(num => {
-//             if (num == 1) {
-//                 res.send({
-//                     message: "Tutorial was deleted successfully!"
-//                 });
-//             } else {
-//                 res.send({
-//                     message: `Cannot delete Tutorial with id=${id}. Maybe Tutorial was not found!`
-//                 });
-//             }
-//         })
-//         .catch(err => {
-//             res.status(500).send({
-//                 message: "Could not delete Tutorial with id=" + id
-//             });
-//         });
-// };
 //
 // // Delete all Tutorials from the database.
 // exports.deleteAll = (req, res) => {

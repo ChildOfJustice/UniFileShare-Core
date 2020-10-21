@@ -19,10 +19,11 @@ import { DemoActions } from '../../../store/demo/types';
 import {NavItem, Table} from "react-bootstrap";
 import {LinkContainer} from "react-router-bootstrap";
 import Navbar from "react-bootstrap/Navbar";
-import {Cluster, CoUser, FileMetadata} from "../../../interfaces/databaseTables";
+import {Cluster, CoUser, File_ClusterSub, FileMetadata} from "../../../interfaces/databaseTables";
 import * as AWS from "aws-sdk";
 import config from "../../../../util/config";
 import {decodeIdToken} from "../../../interfaces/user";
+import {History} from "history";
 
 
 //to use any action you need to add dispatch as an argument to a function!!
@@ -44,6 +45,7 @@ interface IState {
 }
 interface IProps {
     clusterId: string
+    history : History
 }
 
 
@@ -65,28 +67,105 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
 
     constructor(props: ReduxType) {
         super(props);
-
-
-
     }
 
     async componentDidMount() {
-        // @ts-ignore
-        this.loadFilesMetadata(this.props.match.params.clusterId)
+
 
         // @ts-ignore
         //alert("!!!!=> " + this.props.match.params.clusterId)
         await this.props.loadStore()
         await decodeIdToken(this.props.idToken).then(userid => this.setState({userId: userid}))
         // @ts-ignore
-        this.getCurrentUserPermissions()
+        await this.getCurrentUserPermissions()
+
+        // @ts-ignore
+        this.loadFilesMetadata(this.props.match.params.clusterId)
 
     }
 
+    deleteFile = (S3uniqueName:string, fileId: number | null) => {
+        if(this.state.permissions[2] != '1') {
+            alert("You don't have permissions to delete any files!")
+            return
+        }
 
+        AWS.config.update({
+            region: config.AWS.S3.bucketRegion,
+            credentials: new AWS.CognitoIdentityCredentials({
+                IdentityPoolId: config.AWS.IdentityPool.IdentityPoolId
+            })
+        });
+
+        var s3 = new AWS.S3({
+            apiVersion: '2006-03-01',
+            params: {Bucket: config.AWS.S3.bucketName}
+        });
+
+        var params = {  Bucket: config.AWS.S3.bucketName, Key: S3uniqueName };
+
+        s3.deleteObject(params, function(err, data) {
+            if (err) {
+                alert("Cannot delete this file from S3 bucket!")
+                console.log(err, err.stack);  // error
+            }
+            else {
+                console.log();
+                alert("File has been deleted.")
+            }
+        })
+
+        // @ts-ignore
+        var clusterId_ = this.props.match.params.clusterId
+
+        fetch('/file_cluster/delete?fileId='+fileId+"&clusterId="+clusterId_, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        })
+            .then(res => {
+                res.json().then(jsonRes => {
+                    console.log(jsonRes)
+                })
+
+                if (res.ok) {
+                    console.log("Successfully deleted file-cluster")
+
+                    fetch('/files/metadata/delete?id='+fileId, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                            // 'Content-Type': 'application/x-www-form-urlencoded',
+                        }
+                    })
+                        .then(res => {
+                            res.json().then(jsonRes => {
+                                console.log(jsonRes)
+                            })
+
+                            if (res.ok) {
+                                console.log("Successfully deleted file metadata")
+                                // @ts-ignore
+                                this.loadFilesMetadata(this.props.match.params.clusterId)
+                            }
+                            else alert("Error, see logs for more info")
+                        })
+                        .catch(error => alert("Fetch error: " + error))
+                    ///^
+                }
+                else alert("Error, see logs for more info")
+            })
+            .catch(error => alert("Fetch error: " + error))
+        ///^
+    }
 
     downloadFile = (fileName:string, cloud:string) => {
-        console.log("TRYING TO DOWNLOAD FILE WITH " + this.state.permissions + " perms")
+        if(this.state.permissions[0] != '1') {
+            alert("You don't have permissions to download any files.")
+            return
+        }
         if (cloud == 'AWS'){
 
             AWS.config.update({
@@ -107,7 +186,6 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
             });
             promise.then(function(url) {
                 window.open( url, '_blank' );
-                console.log('The URL is', url);
             }, function(err) { alert("error") });
 
 
@@ -178,6 +256,7 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
     }
 
     loadFilesMetadata = (clusterId: number) => {
+
         fetch('/files/metadata/findAll?clusterId='+clusterId,{
             method: 'GET',
             headers: {
@@ -305,7 +384,7 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
 
     // @ts-ignore
     SharePanel = () => (
-        <div className="hello">
+        <div className="SharePanel">
             {(this.state.permissions[3] == '1') ?
                 <Form.Group controlId="formBasicUserName">
                     <Form.Label>Share this cluster</Form.Label>
@@ -340,7 +419,7 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
 
     // @ts-ignore
     UploadPanel = ({ canUpload }) => (
-        <div className="hello">
+        <div className="UploadPanel">
             {canUpload ?
                 <LinkContainer to={// @ts-ignore
                     "/private/uploadFile/" + this.props.match.params.clusterId}>
@@ -350,65 +429,99 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
         </div>
     );
 
+    // @ts-ignore
+    MainComponent = ({ counter }) => (
+        <div className="MainComponent">
+            {(this.state.permissions == '0000') ?
+                <div>
+                    You do not have permissions to see this cluster.<br/>
+                    ERROR 403
+                </div>
+                :
+                <div>
+                    your permission are:<br/>
+
+                    {(this.state.permissions[0] == '1') ?
+                        <div>
+                            You can Download files<br/>
+                        </div>
+                        : ''}
+                    {(this.state.permissions[1] == '1') ?
+                        <div>
+                            You can Upload files<br/>
+                        </div>
+                        : ''}
+                    {(this.state.permissions[2] == '1') ?
+                        <div>
+                            You can Delete files<br/>
+                        </div>
+                        : ''}
+
+                    <this.UploadPanel canUpload={this.state.permissions[1] == "1"}/>
+                    <br/>
+
+                    <this.SharePanel/>
+
+                    <Table striped bordered hover variant="dark">
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>File Name</th>
+                            <th>Cloud provider</th>
+                            <th>File owner</th>
+                            <th>Uploaded by</th>
+                            <th>File size (MBs)</th>
+                            <th>    User</th>
+                            <th>Tags</th>
+                            <th>Delete</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {this.state.files.map(
+                            (fileMetadata: FileMetadata) =>
+                                <tr >
+                                    <td key={counter}>
+                                        {counter++}
+                                    </td>
+                                    <td key={fileMetadata.S3uniqueName} onClick={() => this.downloadFile(fileMetadata.S3uniqueName, fileMetadata.cloud)}>
+                                        {fileMetadata.name}
+                                    </td>
+                                    <td>
+                                        {fileMetadata.cloud}
+                                    </td>
+                                    <td>
+                                        {fileMetadata.uploadedBy}
+                                    </td>
+                                    <td>
+                                        {fileMetadata.ownedBy}
+                                    </td>
+                                    <td>
+                                        {fileMetadata.sizeOfFile_MB}
+                                    </td>
+                                    <td>
+                                        {fileMetadata.tagsKeys.map(keyName => <div>{keyName}</div>) }
+                                    </td>
+                                    <td>
+                                        {fileMetadata.tagsValues.map(keyName => <div>{keyName}</div>) }
+                                    </td>
+                                    <td>
+                                        <Button onClick={() => this.deleteFile(fileMetadata.S3uniqueName, fileMetadata.id)} variant="danger">X</Button>
+                                    </td>
+                                </tr>
+                        )}
+
+                        </tbody>
+                    </Table>
+                </div>
+            }
+        </div>
+    );
+
     render() {
 
         var counter = 1
-        var canUpload_ = this.state.permissions[1] == "1"
         return (
-            <div>
-                permission are: {this.state.permissions}<br/>
-                <this.UploadPanel canUpload={canUpload_}/>
-                <br/>
-
-                <this.SharePanel/>
-
-                <Table striped bordered hover variant="dark">
-                    <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>File Name</th>
-                        <th>Cloud provider</th>
-                        <th>File owner</th>
-                        <th>Uploaded by</th>
-                        <th>File size (MBs)</th>
-                        <th>    User</th>
-                        <th>Tags</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {this.state.files.map(
-                        (fileMetadata: FileMetadata) =>
-                            <tr onClick={() => this.downloadFile(fileMetadata.S3uniqueName, fileMetadata.cloud)}>
-                                <td key={counter}>
-                                    {counter++}
-                                </td>
-                                <td key={fileMetadata.S3uniqueName}>
-                                    {fileMetadata.name}
-                                </td>
-                                <td>
-                                    {fileMetadata.cloud}
-                                </td>
-                                <td>
-                                    {fileMetadata.uploadedBy}
-                                </td>
-                                <td>
-                                    {fileMetadata.ownedBy}
-                                </td>
-                                <td>
-                                    {fileMetadata.sizeOfFile_MB}
-                                </td>
-                                <td>
-                                    {fileMetadata.tagsKeys.map(keyName => <div>{keyName}</div>) }
-                                </td>
-                                <td>
-                                    {fileMetadata.tagsValues.map(keyName => <div>{keyName}</div>) }
-                                </td>
-                            </tr>
-                    )}
-
-                    </tbody>
-                </Table>
-            </div>
+            <this.MainComponent counter={counter}/>
         )
     }
 }

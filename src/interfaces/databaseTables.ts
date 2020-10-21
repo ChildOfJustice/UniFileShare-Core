@@ -1,4 +1,5 @@
 export interface FileMetadata {
+    id: number | null
     name: string
     S3uniqueName: string
     cloud: string
@@ -10,7 +11,7 @@ export interface FileMetadata {
 }
 
 export interface File_ClusterSub {
-    fileId: string
+    fileId: number
     clusterId: string
 }
 
