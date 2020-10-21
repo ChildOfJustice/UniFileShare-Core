@@ -172,6 +172,7 @@ class UploadFile extends React.Component<ReduxType, IState> {
 
             //SEND Metadata TO DB
             const metadata: FileMetadata = {
+                id: null,
                 name: file.name,
                 //TODO
                 S3uniqueName: "CLUSTER_NAME/" + uuidv4(),

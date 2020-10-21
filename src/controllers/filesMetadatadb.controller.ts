@@ -41,8 +41,11 @@ class DatabaseController {
         // // Update a Tutorial with id
         // router.put("/:id", tutorials.update);
         //
-        // // Delete a Tutorial with id
-        // router.delete("/:id", tutorials.delete);
+        // Delete a note with id
+        this.router.delete("/delete", this.delete);
+
+
+        this.router.get("/calcUsedSize", this.calcUsedSize);
         //
         // // Create a new Tutorial
         // router.delete("/", tutorials.deleteAll);
@@ -67,6 +70,7 @@ class DatabaseController {
             // username: req.body.username,
             // someReal: req.body.someReal,
             // signUpDate: req.body.signUpDate
+            id: null,
             name: req.body.name,
             S3uniqueName: req.body.S3uniqueName,
             cloud: req.body.cloud,
@@ -103,7 +107,7 @@ class DatabaseController {
 
 
         MetadataDB.findAll({
-            attributes: ['name', 'cloud', 'uploadedBy', 'ownedBy', 'sizeOfFile_MB', 'tagsKeys', 'tagsValues'],
+            attributes: ['id', 'name', 'cloud', 'uploadedBy', 'ownedBy', 'sizeOfFile_MB', 'tagsKeys', 'tagsValues'],
             include: [{
                 model: db.file_clusterSubDB,
                 where: condition,
@@ -192,29 +196,27 @@ class DatabaseController {
 // };
 //
 // // Delete a Tutorial with the specified id in the request
-// exports.delete = (req, res) => {
-//     const id = req.params.id;
-//
-//     Tutorial.destroy({
-//         where: { id: id }
-//     })
-//         .then(num => {
-//             if (num == 1) {
-//                 res.send({
-//                     message: "Tutorial was deleted successfully!"
-//                 });
-//             } else {
-//                 res.send({
-//                     message: `Cannot delete Tutorial with id=${id}. Maybe Tutorial was not found!`
-//                 });
-//             }
-//         })
-//         .catch(err => {
-//             res.status(500).send({
-//                 message: "Could not delete Tutorial with id=" + id
-//             });
-//         });
-// };
+    delete(req: any, res: any) {
+        MetadataDB.destroy({
+            where: { id: req.query.id}
+        })
+            .then((num: number) => {
+                if (num == 1) {
+                    res.send({
+                        message: "file metadata was deleted successfully!"
+                    });
+                } else {
+                    res.send({
+                        message: `Cannot delete file metadata. Maybe it was not found!`
+                    });
+                }
+            })
+            .catch((err: any) => {
+                res.status(500).send({
+                    message: err
+                });
+            });
+    };
 //
 // // Delete all Tutorials from the database.
 // exports.deleteAll = (req, res) => {

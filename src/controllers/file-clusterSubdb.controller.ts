@@ -37,8 +37,8 @@ class File_ClusterdbController {
         // // Update a Tutorial with id
         // router.put("/:id", tutorials.update);
         //
-        // // Delete a Tutorial with id
-        // router.delete("/:id", tutorials.delete);
+        // Delete a note with id
+        this.router.delete("/delete", this.delete);
         //
         // // Create a new Tutorial
         // router.delete("/", tutorials.deleteAll);
@@ -130,30 +130,30 @@ class File_ClusterdbController {
 //         });
 // };
 //
-// // Delete a Tutorial with the specified id in the request
-// exports.delete = (req, res) => {
-//     const id = req.params.id;
-//
-//     Tutorial.destroy({
-//         where: { id: id }
-//     })
-//         .then(num => {
-//             if (num == 1) {
-//                 res.send({
-//                     message: "Tutorial was deleted successfully!"
-//                 });
-//             } else {
-//                 res.send({
-//                     message: `Cannot delete Tutorial with id=${id}. Maybe Tutorial was not found!`
-//                 });
-//             }
-//         })
-//         .catch(err => {
-//             res.status(500).send({
-//                 message: "Could not delete Tutorial with id=" + id
-//             });
-//         });
-// };
+// Delete a Tutorial with the specified id in the request
+    delete(req: any, res: any) {
+
+        File_Clusterdb.destroy({
+            where: { fileId: req.query.fileId,
+                clusterId: req.query.clusterId }
+        })
+            .then((num: number) => {
+                if (num == 1) {
+                    res.send({
+                        message: "Tutorial was deleted successfully!"
+                    });
+                } else {
+                    res.send({
+                        message: `Cannot delete file in sub table with id=${req.query.fileId}. for cluster ${req.query.clusterId}. Maybe it was not found!`
+                    });
+                }
+            })
+            .catch((err: any) => {
+                res.status(500).send({
+                    message: err
+                });
+            });
+    };
 //
 // // Delete all Tutorials from the database.
 // exports.deleteAll = (req, res) => {

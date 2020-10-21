@@ -40,6 +40,7 @@ class UsersdbController {
         //
         // // Delete a Tutorial with id
         // router.delete("/:id", tutorials.delete);
+        this.router.delete("/delete", this.delete);
         //
         // // Create a new Tutorial
         // router.delete("/", tutorials.deleteAll);
@@ -181,29 +182,31 @@ class UsersdbController {
 // };
 //
 // // Delete a Tutorial with the specified id in the request
-// exports.delete = (req, res) => {
-//     const id = req.params.id;
-//
-//     Tutorial.destroy({
-//         where: { id: id }
-//     })
-//         .then(num => {
-//             if (num == 1) {
-//                 res.send({
-//                     message: "Tutorial was deleted successfully!"
-//                 });
-//             } else {
-//                 res.send({
-//                     message: `Cannot delete Tutorial with id=${id}. Maybe Tutorial was not found!`
-//                 });
-//             }
-//         })
-//         .catch(err => {
-//             res.status(500).send({
-//                 message: "Could not delete Tutorial with id=" + id
-//             });
-//         });
-// };
+    delete(req: any, res: any) {
+        Usersdb.destroy({
+            where: {
+                cognitoUserId: {
+                    [Op.iLike]: `%${req.query.cognitoUserId}%`
+                }
+            }
+        })
+            .then((num: number) => {
+                if (num == 1) {
+                    res.send({
+                        message: `user ${req.query.cognitoUserId} was deleted successfully!`
+                    });
+                } else {
+                    res.send({
+                        message: `Cannot delete user ${req.query.cognitoUserId}. Maybe it was not found!`
+                    });
+                }
+            })
+            .catch((err: any) => {
+                res.status(500).send({
+                    message: err
+                });
+            });
+    };
 //
 // // Delete all Tutorials from the database.
 // exports.deleteAll = (req, res) => {

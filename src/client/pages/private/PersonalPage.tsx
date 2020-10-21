@@ -10,12 +10,15 @@ import * as storeService from '../../../store/demo/store.service'
 import {DemoActions} from '../../../store/demo/types';
 import {Table} from "react-bootstrap";
 import {LinkContainer} from "react-router-bootstrap";
-import {Cluster} from "../../../interfaces/databaseTables";
+import {Cluster, FileMetadata} from "../../../interfaces/databaseTables";
 import * as jwt from "jsonwebtoken";
 import AuthMiddleware from "../../../middleware/auth.middleware";
 import config from "../../../../util/config";
 import * as jwkToPem from "jwk-to-pem";
 import {decodeIdToken} from "../../../interfaces/user";
+import ClusterOverview from "./ClusterOverview";
+import * as AWS from "aws-sdk";
+import {History} from "history";
 
 const mapStateToProps = ({demo}: IRootState) => {
     const {authToken, idToken, loading} = demo;
@@ -30,12 +33,17 @@ const mapDispatcherToProps = (dispatch: Dispatch<DemoActions>) => {
     }
 }
 
-type ReduxType = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatcherToProps>;
+interface IProps {
+    history : History
+    /* other props for ChildComponent */
+}
+
+type ReduxType = IProps & ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatcherToProps>;
 
 
 interface IState {
     newClusterName: string
-    clusters: any
+    clusters: Cluster[]
     userId: string
     userRole: string
     queryToDB: string
@@ -104,12 +112,173 @@ class PersonalPage extends React.Component<ReduxType, IState> {
             })
             .catch(error => alert("Fetch error: " + error))
     }
+    deleteFile = (S3uniqueName:string, fileId: number | null) => {
+
+        AWS.config.update({
+            region: config.AWS.S3.bucketRegion,
+            credentials: new AWS.CognitoIdentityCredentials({
+                IdentityPoolId: config.AWS.IdentityPool.IdentityPoolId
+            })
+        });
+
+        var s3 = new AWS.S3({
+            apiVersion: '2006-03-01',
+            params: {Bucket: config.AWS.S3.bucketName}
+        });
+
+        var params = {  Bucket: config.AWS.S3.bucketName, Key: S3uniqueName };
+
+        s3.deleteObject(params, function(err, data) {
+            if (err) {
+                alert("Cannot delete this file from S3 bucket!")
+                console.log(err, err.stack);  // error
+            }
+            else {
+                console.log();
+                alert("File has been deleted.")
+            }
+        })
+
+        // @ts-ignore
+        var clusterId_ = this.props.match.params.clusterId
+
+        fetch('/file_cluster/delete?fileId='+fileId+"&clusterId="+clusterId_, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        })
+            .then(res => {
+                res.json().then(jsonRes => {
+                    console.log(jsonRes)
+                })
+
+                if (res.ok) {
+                    console.log("Successfully deleted file-cluster")
+
+                    fetch('/files/metadata/delete?id='+fileId, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                            // 'Content-Type': 'application/x-www-form-urlencoded',
+                        }
+                    })
+                        .then(res => {
+                            res.json().then(jsonRes => {
+                                console.log(jsonRes)
+                            })
+
+                            if (res.ok) {
+                                console.log("Successfully deleted file metadata")
+                                // @ts-ignore
+                                this.loadFilesMetadata(this.props.match.params.clusterId)
+                            }
+                            else alert("Error, see logs for more info")
+                        })
+                        .catch(error => alert("Fetch error: " + error))
+                    ///^
+                }
+                else alert("Error, see logs for more info")
+            })
+            .catch(error => alert("Fetch error: " + error))
+        ///^
+    }
+
+    async deleteCluster(clusterId: number | null){
+
+        var files: FileMetadata[]
+
+        //get all files stored in this cluster
+        await fetch('/files/metadata/findAll?clusterId='+clusterId,{
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        })
+            .then(res => {
+                //console.log(res)
+                res.json().then(jsonRes => {
+                    console.log(jsonRes)
+                    files = jsonRes
+                    if(files.length != 0){
+                        alert("You need to delete all files first!")
+                        return
+                    }
+                    //delete each file from file-cluster table and from metadata table:
+                    files.forEach(file => {
+                        this.deleteFile(file.S3uniqueName, file.id)
+                    })
+                    //TODO use async and wait files to be deleted
+                    //delete cluster
+                    fetch('/clusters/delete?clusterId='+clusterId, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                            // 'Content-Type': 'application/x-www-form-urlencoded',
+                        }
+                    })
+                        .then(res => {
+                            res.json().then(jsonRes => {
+                                console.log(jsonRes)
+                            })
+
+                            if (res.ok) {
+                                console.log("Successfully deleted cluster")
+                                this.getAllUserClusters()
+                            }
+                            else alert("Error, see logs for more info")
+                        })
+                        .catch(error => alert("Fetch error: " + error))
+                })
+
+                if(res.ok)
+                    console.log("Successfully get all nodes from db")
+                else alert("Error, see logs for more info")
+            })
+            .catch(error => alert("Fetch error: " + error))
+
+        this.props.history.push("/private/area")
+
+    }
+
+    async deleteUser() {
+        if(this.state.clusters.length != 0){
+            alert("You need to delete all clusters first!")
+            return
+        }
+        for (const cluster of this.state.clusters) {
+            await this.deleteCluster(cluster.clusterId)
+        }
+
+        //delete cluster
+        await fetch('/users/delete?cognitoUserId='+this.state.userId, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        })
+            .then(res => {
+                res.json().then(jsonRes => {
+                    console.log(jsonRes)
+                })
+
+                if (res.ok) {
+                    console.log("Successfully deleted user")
+                    this.props.history.push("/")
+                }
+                else alert("Error, see logs for more info")
+            })
+            .catch(error => alert("Fetch error: " + error))
+    }
+
 
     getUserRole = () => {
         if(this.state.userId == ''){
             return
         }
-        //TODO
         fetch('/users/find?userId='+this.state.userId, {
             method: 'GET',
             headers: {
@@ -239,6 +408,7 @@ class PersonalPage extends React.Component<ReduxType, IState> {
                 Your user id is: "{this.state.userId}".<br/>
                 Your role is: "{this.state.userRole}".<br/>
                 Your current used storage size is {this.state.usedStorageSize} MB.
+                <Button onClick={() => this.deleteUser()} variant="danger">DELETE THIS ACCOUNT</Button> <br/>
 
                 <Form.Group controlId="formBasicUserName">
                     <Form.Label>Cluster Name</Form.Label>
@@ -260,6 +430,7 @@ class PersonalPage extends React.Component<ReduxType, IState> {
                     <tr>
                         <th>#</th>
                         <th>Cluster</th>
+                        <th>Delete</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -273,6 +444,9 @@ class PersonalPage extends React.Component<ReduxType, IState> {
                                 </td>
                                 <td>
                                     {l.name}
+                                </td>
+                                <td>
+                                    <Button onClick={() => this.deleteCluster(l.clusterId)} variant="danger">X</Button>
                                 </td>
                             </tr>
                         </LinkContainer>
