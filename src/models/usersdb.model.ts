@@ -7,7 +7,7 @@ export default function (sequelize:any, Sequelize:any, rolesDB:any) {
         cognitoUserId: {
             type: Sequelize.STRING(50),
             unique: true,
-            primaryKey: true,/////TODO!!!!!
+            primaryKey: true,
         },
         roleId: {
             type: Sequelize.INTEGER,

@@ -123,7 +123,7 @@ class SignUp extends React.Component<ReduxType, IState> {
                             .catch(error => alert("Fetch error: " + error))
 
                         //add tokens to the store and redirect to the client page
-                        //TODO YOU NEED TO CONFIRM THE USER <----(!)
+                        //TODO YOU NEED TO CONFIRM THE USER <----(!) and then you will be able to sign in after sigh up
                         // fetch('/auth/signIn',{
                         //     method: 'POST',
                         //     headers: {

@@ -7,6 +7,7 @@ import {User} from "../interfaces/user";
 
 import config from "../../util/config"
 import {CognitoIdentityServiceProvider} from "aws-sdk";
+import * as AWS from "aws-sdk";
 
 class AuthController {
     public path = '/auth'
@@ -21,6 +22,8 @@ class AuthController {
         this.router.post('/signIn', this.validateBody('signIn'), this.signIn)
         this.router.post('/verify', this.validateBody('verify'), this.verify)
     }
+
+
 
 
     signUp(req: Request, res: Response){
@@ -47,6 +50,23 @@ class AuthController {
         cognito.signUpUser(username, password, userAttr)
             .then(promiseOutput =>{
                 if(promiseOutput.success){
+
+                    //TODO get credentials from IdentityPool and call cognito.confirmUser()
+                    AWS.config.update({
+                        region: config.AWS.region,
+                        credentials: new AWS.CognitoIdentityCredentials({
+                            IdentityPoolId: config.AWS.IdentityPool.IdentityPoolId,
+                            // Logins: { // optional tokens, used for authenticated login
+                            //         //     'graph.facebook.com': 'FBTOKEN',
+                            //         //     'www.amazon.com': 'AMAZONTOKEN',
+                            //         //     'accounts.google.com': 'GOOGLETOKEN',
+                            //         //     'appleid.apple.com': 'APPLETOKEN'
+                            //         // }
+                        })
+                    });
+
+
+
                     res.status(200).json({"data": promiseOutput.msg}).end()
                 } else {
                     res.status(500).json({"Internal server error": promiseOutput.msg}).end()

@@ -13,7 +13,7 @@ class HomeController {
 
     private initRoutes() {
         this.router.get('/', this.home)
-        this.router.post('/api/test', this.test)
+        //this.router.post('/api/test', this.test)
         //this.router.get('/api/test', this.test) !!!
         //this.router.get('/upload-file', this.uploadFile)
     }
@@ -30,7 +30,7 @@ class HomeController {
         //res.json(msg);
         //console.log('Sent the msg!');
 
-        //TODO
+        //TODO DELETE THIS IF EVERYTHING IS WORKING
         db.sequelizeEntity.query(req.body).then((data: any) => {
             res.send(data);
         })

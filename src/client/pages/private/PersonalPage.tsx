@@ -19,6 +19,7 @@ import {decodeIdToken} from "../../../interfaces/user";
 import ClusterOverview from "./ClusterOverview";
 import * as AWS from "aws-sdk";
 import {History} from "history";
+import CognitoService from "../../../services/cognito.service";
 
 const mapStateToProps = ({demo}: IRootState) => {
     const {authToken, idToken, loading} = demo;
@@ -206,35 +207,62 @@ class PersonalPage extends React.Component<ReduxType, IState> {
                         alert("You need to delete all files first!")
                         return
                     }
+                    //TODO use async and wait files to be deleted
                     //delete each file from file-cluster table and from metadata table:
                     files.forEach(file => {
                         this.deleteFile(file.S3uniqueName, file.id)
                     })
-                    //TODO use async and wait files to be deleted
-                    //delete cluster
-                    fetch('/clusters/delete?clusterId='+clusterId, {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json'
-                            // 'Content-Type': 'application/x-www-form-urlencoded',
-                        }
-                    })
-                        .then(res => {
-                            res.json().then(jsonRes => {
-                                console.log(jsonRes)
-                            })
 
-                            if (res.ok) {
-                                console.log("Successfully deleted cluster")
-                                this.getAllUserClusters()
-                            }
-                            else alert("Error, see logs for more info")
-                        })
-                        .catch(error => alert("Fetch error: " + error))
+
+
                 })
 
                 if(res.ok)
                     console.log("Successfully get all nodes from db")
+                else alert("Error, see logs for more info")
+            })
+            .catch(error => alert("Fetch error: " + error))
+
+
+
+        //delete cousers associated with this cluster
+        await fetch('/cousers/deleteAllAssociatedWithCluster?clusterId='+clusterId, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        })
+            .then(res => {
+                res.json().then(jsonRes => {
+                    console.log(jsonRes)
+                })
+
+                if (res.ok) {
+                    console.log("Successfully deleted all cousers associated with the cluster")
+                    this.getAllUserClusters()
+                }
+                else alert("Error with deleting associated cousers")
+            })
+            .catch(error => alert("Fetch error: " + error))
+
+        //delete cluster
+        await fetch('/clusters/delete?clusterId='+clusterId, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        })
+            .then(res => {
+                res.json().then(jsonRes => {
+                    console.log(jsonRes)
+                })
+
+                if (res.ok) {
+                    console.log("Successfully deleted cluster")
+                    this.getAllUserClusters()
+                }
                 else alert("Error, see logs for more info")
             })
             .catch(error => alert("Fetch error: " + error))
@@ -252,7 +280,20 @@ class PersonalPage extends React.Component<ReduxType, IState> {
             await this.deleteCluster(cluster.clusterId)
         }
 
-        //delete cluster
+        const cognito = new CognitoService();
+        await cognito.deleteUser(this.props.authToken)
+            .then(promiseOutput =>{
+                if(promiseOutput.success){
+                    console.log("user successfully deleted: " + promiseOutput.msg)
+                    // @ts-ignore
+                    //userCognitoId = promiseOutput.msg.UserSub
+                } else {
+                    console.log("ERROR WITH DELETING USER: " + promiseOutput.msg)
+                    return
+                }
+            });
+
+        //delete user
         await fetch('/users/delete?cognitoUserId='+this.state.userId, {
             method: 'DELETE',
             headers: {
@@ -356,10 +397,13 @@ class PersonalPage extends React.Component<ReduxType, IState> {
         const data = {
             query: this.state.queryToDB
         }
-        fetch('/api/test', {
+        const { authToken, idToken, loading} = this.props;
+        fetch('/protected/adminQuery', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Auth': authToken,
+                'Identity': idToken
             },
             body: JSON.stringify(data)
         })

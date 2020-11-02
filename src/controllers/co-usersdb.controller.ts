@@ -42,6 +42,8 @@ class CousersdbController {
         //
         // // Delete a Tutorial with id
         // router.delete("/:id", tutorials.delete);
+        this.router.delete("/delete", this.delete);
+        this.router.delete("/deleteAllAssociatedWithCluster", this.deleteAllAssociatedWithCluster);
         //
         // // Create a new Tutorial
         // router.delete("/", tutorials.deleteAll);
@@ -60,7 +62,7 @@ class CousersdbController {
             coUserId: req.body.coUserId,
             clusterId: req.body.clusterId,
             permissions: req.body.permissions,
-            permissionGiverUserId: req.body.userId
+            permissionGiverUserId: req.body.permissionGiverUserId
         };
 
 
@@ -79,12 +81,10 @@ class CousersdbController {
     }
 
     findAll (req:any, res:any){
-        //retrieve all clusters, associated with this user
-        const userId = req.query.userId;
-        const condition = userId ? {
-            coUserId: {
-                [Op.iLike]: `%${userId}%`
-            }
+        //retrieve all cousers, associated with this cluster
+        const clusterId = req.query.clusterId;
+        const condition = clusterId ? {
+            clusterId: clusterId
         } : null;
 
         Cousersdb.findAll({ where: condition })
@@ -162,29 +162,54 @@ class CousersdbController {
 // };
 //
 // // Delete a Tutorial with the specified id in the request
-// exports.delete = (req, res) => {
-//     const id = req.params.id;
-//
-//     Tutorial.destroy({
-//         where: { id: id }
-//     })
-//         .then(num => {
-//             if (num == 1) {
-//                 res.send({
-//                     message: "Tutorial was deleted successfully!"
-//                 });
-//             } else {
-//                 res.send({
-//                     message: `Cannot delete Tutorial with id=${id}. Maybe Tutorial was not found!`
-//                 });
-//             }
-//         })
-//         .catch(err => {
-//             res.status(500).send({
-//                 message: "Could not delete Tutorial with id=" + id
-//             });
-//         });
-// };
+    deleteAllAssociatedWithCluster(req: any, res: any) {
+        Cousersdb.destroy({
+            where: { clusterId: req.query.clusterId}
+        })
+            .then((num: number) => {
+                if (num == 1) {
+                    res.send({
+                        message: `couser for cluster ${req.query.clusterId} was deleted successfully!`
+                    });
+                } else {
+                    res.send({
+                        message: `Cannot delete couser for cluster ${req.query.clusterId}. Maybe it was not found!`
+                    });
+                }
+            })
+            .catch((err: any) => {
+                res.status(500).send({
+                    message: err
+                });
+            });
+    };
+    delete(req: any, res: any) {
+        const coUserId = req.query.coUserId;
+        const clusterId = req.query.clusterId;
+
+        console.log(req.query.coUserId + " " + req.query.clusterId)
+
+        Cousersdb.destroy({
+            where:  {coUserId: coUserId, clusterId: clusterId}
+        })
+            .then((num: number) => {
+                if (num == 1) {
+                    res.send({
+                        message: `couser ${req.query.coUserId} for cluster ${req.query.clusterId} was deleted successfully!`
+                    });
+                } else {
+                    res.send({
+                        message: `Cannot delete couser ${req.query.coUserId} for cluster ${req.query.clusterId}. Maybe it was not found!`
+                    });
+                }
+            })
+            .catch((err: any) => {
+                console.log(err)
+                res.status(500).send({
+                    message: err.toString()
+                });
+            });
+    };
 //
 // // Delete all Tutorials from the database.
 // exports.deleteAll = (req, res) => {

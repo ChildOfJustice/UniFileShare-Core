@@ -35,6 +35,7 @@ const mapDispatcherToProps = (dispatch: Dispatch<DemoActions>) => {
 
 interface IState {
     files: FileMetadata[]
+    coUsers: CoUser[]
     coUserId: string
     userId: string
     downloadPermissionCheckboxChecked: boolean
@@ -55,6 +56,7 @@ type ReduxType = IProps & ReturnType<typeof mapStateToProps> & ReturnType<typeof
 class ClusterOverview extends React.Component<ReduxType, IState> {
     public state: IState = {
         files: [],
+        coUsers: [],
         coUserId: "",
         userId: "",
         downloadPermissionCheckboxChecked: false,
@@ -81,6 +83,9 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
 
         // @ts-ignore
         this.loadFilesMetadata(this.props.match.params.clusterId)
+
+        // @ts-ignore
+        this.getAllCousers(this.props.match.params.clusterId);
 
     }
 
@@ -278,7 +283,29 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
             .catch(error => alert("Fetch error: " + error))
     }
 
+    getAllCousers = (clusterId: number) => {
 
+        fetch('/cousers/findAll?clusterId='+clusterId,{
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        })
+            .then(res => {
+                //console.log(res)
+                res.json().then(jsonRes => {
+                    console.log("CO USERS:")
+                    console.log(jsonRes)
+                    this.setState({coUsers: jsonRes})
+                })
+
+                if(res.ok)
+                    console.log("Successfully get all nodes from db")
+                else alert("Error, see logs for more info")
+            })
+            .catch(error => alert("Fetch error: " + error))
+    }
     getCurrentUserPermissions = () => {
         if(this.state.userId == ''){
             return
@@ -301,6 +328,27 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
                         this.setState({permissions: "1111"})
                         gotPerms = true
                     }
+                    if(!gotPerms) {
+                        // @ts-ignore
+                        fetch('/cousers/getPermissions?userId=' + this.state.userId + '&clusterId=' + this.props.match.params.clusterId, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json'
+                                // 'Content-Type': 'application/x-www-form-urlencoded',
+                            }
+                        })
+                            .then(res => {
+                                res.json().then(jsonRes => {
+                                    console.log(jsonRes)
+                                    this.setState({permissions: jsonRes[0].permissions})
+                                })
+
+                                if (res.ok)
+                                    console.log("Successfully get all nodes from db")
+                                else alert("Error, see logs for more info")
+                            })
+                            .catch(error => alert("Fetch error: " + error))
+                    }
                 })
 
                 if (res.ok)
@@ -308,28 +356,6 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
                 else alert("Error, see logs for more info")
             })
             .catch(error => alert("Fetch error: " + error))
-
-        if(!gotPerms) {
-            // @ts-ignore
-            fetch('/cousers/getPermissions?userId=' + this.state.userId + '&clusterId=' + this.props.match.params.clusterId, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                    // 'Content-Type': 'application/x-www-form-urlencoded',
-                }
-            })
-                .then(res => {
-                    res.json().then(jsonRes => {
-                        console.log(jsonRes)
-                        this.setState({permissions: jsonRes[0].permissions})
-                    })
-
-                    if (res.ok)
-                        console.log("Successfully get all nodes from db")
-                    else alert("Error, see logs for more info")
-                })
-                .catch(error => alert("Fetch error: " + error))
-        }
     }
     shareCluster = () => {
         const downloadPerm = this.state.downloadPermissionCheckboxChecked ? 1 : 0;
@@ -360,8 +386,40 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
 
                 if (res.ok) {
                     console.log("Successfully created new coUser")
+
+                    // @ts-ignore
+                    this.getAllCousers(this.props.match.params.clusterId);
                 }
                 else alert("Error, see logs for more info")
+            })
+            .catch(error => alert("Fetch error: " + error))
+    }
+    deleteCouser = (couserId: string) => {
+        let coUserData: CoUser = {
+            // @ts-ignore
+            clusterId: this.props.match.params.clusterId,
+            permissionGiverUserId: "",
+            coUserId: couserId,
+            permissions: "",
+        }
+
+        fetch('/cousers/delete?clusterId='+coUserData.clusterId+"&coUserId="+couserId, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        })
+            .then(res => {
+                res.json().then(jsonRes => {
+                    console.log(jsonRes)
+                })
+
+                if (res.ok) {
+                    console.log("Successfully deleted coUser")
+                    this.getAllCousers(coUserData.clusterId)
+                }
+                else alert("Error with deleting couser")
             })
             .catch(error => alert("Fetch error: " + error))
     }
@@ -439,7 +497,7 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
                 </div>
                 :
                 <div>
-                    your permission are:<br/>
+                    your permissions are:<br/>
 
                     {(this.state.permissions[0] == '1') ?
                         <div>
@@ -506,6 +564,42 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
                                     </td>
                                     <td>
                                         <Button onClick={() => this.deleteFile(fileMetadata.S3uniqueName, fileMetadata.id)} variant="danger">X</Button>
+                                    </td>
+                                </tr>
+                        )}
+
+                        </tbody>
+                    </Table>
+
+                    This cluster is shared with: <br/>
+                    <Table striped bordered hover variant="light">
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>User ID</th>
+                            <th>Permissions</th>
+                            <th>Permission giver user ID</th>
+                            <th>Delete</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {this.state.coUsers.map(
+                            (couserData: CoUser) =>
+                                <tr >
+                                    <td key={counter}>
+                                        {counter++}
+                                    </td>
+                                    <td key={couserData.coUserId}>
+                                        {couserData.coUserId}
+                                    </td>
+                                    <td>
+                                        {couserData.permissions}
+                                    </td>
+                                    <td>
+                                        {couserData.permissionGiverUserId}
+                                    </td>
+                                    <td>
+                                        <Button onClick={() => this.deleteCouser(couserData.coUserId)} variant="danger">X</Button>
                                     </td>
                                 </tr>
                         )}
