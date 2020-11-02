@@ -174,8 +174,8 @@ class UploadFile extends React.Component<ReduxType, IState> {
             const metadata: FileMetadata = {
                 id: null,
                 name: file.name,
-                //TODO
-                S3uniqueName: "CLUSTER_NAME/" + uuidv4(),
+                // @ts-ignore
+                S3uniqueName: this.props.match.params.clusterId + "/" + uuidv4(),
                 cloud: "AWS",
                 ownedBy: defaultTagValue1,
                 uploadedBy: defaultTagValue2,
@@ -245,7 +245,7 @@ class UploadFile extends React.Component<ReduxType, IState> {
                 }
             )
 
-            //TODO
+            //TODO turn upload on
             return;
 
             const params = {

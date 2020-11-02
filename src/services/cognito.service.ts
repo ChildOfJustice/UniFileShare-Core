@@ -6,7 +6,7 @@ import {PromiseOutput} from "../interfaces/promiseOutput";
 
 class CognitoService {
     private  config = {
-        region: config.userPoolRegion
+        region: config.userPoolRegion,
     }
 
     private secretHash: string = config.secretHash
@@ -14,7 +14,49 @@ class CognitoService {
 
     public cognitoIdentity: any;
     constructor() {
+
         this.cognitoIdentity = new AWS.CognitoIdentityServiceProvider(this.config);
+    }
+
+    public async deleteUser(accessToken: string): Promise<PromiseOutput> {
+        // const adminConfig = {
+        //     region: config.userPoolRegion,
+        //     credentials: new AWS.CognitoIdentityCredentials({
+        //         IdentityPoolId: config.AWS.IdentityPool.IdentityPoolId,
+        //         // Logins: { // optional tokens, used for authenticated login
+        //         //     'graph.facebook.com': 'FBTOKEN',
+        //         //     'www.amazon.com': 'AMAZONTOKEN',
+        //         //     'accounts.google.com': 'GOOGLETOKEN',
+        //         //     'appleid.apple.com': 'APPLETOKEN'
+        //         // }
+        //     })
+        // }
+        //const adminCognitoIdentity = new AWS.CognitoIdentityServiceProvider(adminConfig);
+
+
+
+        // var params = {
+        //     UserPoolId: config.userPoolId, /* required */
+        //     Username: username /* required */
+        // };
+
+        var params = {
+            AccessToken: accessToken /* required */
+        };
+        try {
+            const data = await this.cognitoIdentity.deleteUser(params).promise()
+            return {
+                success: true,
+                msg: data
+            }
+        } catch (error) {
+            console.log(error)
+            return {
+                success: false,
+                msg: error
+            }
+        }
+
     }
 
     public async signUpUser(username: string, password: string, userAttr: Array<any>): Promise<PromiseOutput>{
@@ -40,6 +82,10 @@ class CognitoService {
                 msg: error
             }
         }
+    }
+
+    public async confirmUser(){
+
     }
 
     public async verifyAccount(username: string, code: string): Promise<PromiseOutput>{

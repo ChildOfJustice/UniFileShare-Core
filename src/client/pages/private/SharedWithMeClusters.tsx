@@ -63,7 +63,7 @@ class PersonalPage extends React.Component<ReduxType, IState> {
         if(this.state.userId == ''){
             return
         }
-        //TODO
+
         fetch('/users/find?userId='+this.state.userId, {
             method: 'GET',
             headers: {
@@ -131,7 +131,6 @@ class PersonalPage extends React.Component<ReduxType, IState> {
                     <tbody>
                     {this.state.clusters.map(
                         (l: Cluster) => <LinkContainer to={{
-                            //TODO !!!! SECURE CLUSTER PAGE!
                             pathname: '/private/clusters/' + l.clusterId,
                         }}>
                             <tr onClick={this.handleTableClick}>
