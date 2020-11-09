@@ -1,13 +1,18 @@
 import Jumbotron from "react-bootstrap/Jumbotron";
-import {LinkContainer} from "react-router-bootstrap";
-import Button from "react-bootstrap/Button";
 import * as React from "react";
 import * as AWS from "aws-sdk"
-import * as CryptoJS from "crypto-js"
-import {FileMetadata} from "../../../interfaces/databaseTables";
+import {File_ClusterSub, FileMetadata} from "../../../interfaces/databaseTables";
 import { v4 as uuidv4 } from 'uuid'
 
 import config from "../../../../util/config";
+import {IRootState} from "../../../store";
+import {Dispatch} from "redux";
+import {DemoActions} from "../../../store/demo/types";
+import * as storeService from "../../../store/demo/store.service";
+import {decodeIdToken} from "../../../interfaces/user";
+import {connect} from "react-redux";
+import Button from "react-bootstrap/Button";
+import {FetchParams, makeFetch} from "../../Interface";
 
 ///CONFIG
 //AZURE:
@@ -16,15 +21,100 @@ import config from "../../../../util/config";
 // var storageKey = "SECRET";
 //^
 
+const mapStateToProps = ({demo}: IRootState) => {
+    const {authToken, idToken, loading} = demo;
+    return {authToken, idToken, loading};
+}
+
+//to use any action you need to add dispatch as an argument to a function!!
+const mapDispatcherToProps = (dispatch: Dispatch<DemoActions>) => {
+    return {
+        loadStore: () => storeService.loadStore(dispatch),
+    }
+}
+interface IProps {
+    clusterId: string
+}
+type ReduxType = IProps & ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatcherToProps>;
+
+
+interface IState {
+    userId: string
+    canUpload: boolean
+}
+
 
 // eslint-disable-next-line react/display-name,@typescript-eslint/explicit-module-boundary-types
-export default class UploadFile extends React.Component {
+class UploadFile extends React.Component<ReduxType, IState> {
 
-    tagIndex = 1;
+    tagIndex = 1
+    public state: IState = {
+        userId: '',
+        canUpload: false
+    }
+
+    constructor(props: ReduxType) {
+        super(props);
+    }
+
+    async componentDidMount() {
+        await this.props.loadStore()
+
+        await decodeIdToken(this.props.idToken).then(userid => this.setState({userId: userid}))
+    }
+
+    async checkStorageSizeLimitation(fileSize: number) {
+
+
+        const {authToken, idToken, loading} = this.props;
+//TODO OWNER OF THE CLUSTER!!!
+
+
+        let clusterOwnerUserId = ""
+
+        let fetchParams: FetchParams = {
+            // @ts-ignore
+            url: '/clusters?clusterId='+this.props.match.params.clusterId,
+            authToken: authToken,
+            idToken: idToken,
+            method: 'GET',
+            body: null,
+
+            actionDescription: "get cluster to check available storage size"
+        }
+
+        await makeFetch<any>(fetchParams).then(jsonRes => {
+            console.log(jsonRes)
+            clusterOwnerUserId = jsonRes[0].ownerUserId
+        }).catch(error => alert("ERROR: " + error))
 
 
 
-    uploadFile = () => {
+
+        fetchParams = {
+            url: '/files/metadata/calcUsedSize?ownerUserId='+clusterOwnerUserId,
+            authToken: authToken,
+            idToken: idToken,
+            method: 'GET',
+            body: null,
+
+            actionDescription: "get used storage size"
+        }
+
+        await makeFetch<any>(fetchParams).then(jsonRes => {
+            console.log(jsonRes)
+            if(jsonRes[0].usedStorageSize == null) {
+                //alert("There is no info about your used storage size. Please, contact the administrator.")
+                this.setState({canUpload: true})
+            }
+            else {
+                if(fileSize + jsonRes[0].usedStorageSize < config.AppConfig.maxUserStorageSize_MB)
+                    this.setState({canUpload: true})
+            }
+        }).catch(error => alert("ERROR: " + error))
+    }
+
+     uploadFile = () => {
         var cloudCombobox = document.getElementById("cloudCombobox");
         // @ts-ignore
         var itemValue = cloudCombobox.options[cloudCombobox.selectedIndex].value;
@@ -104,9 +194,10 @@ export default class UploadFile extends React.Component {
 
             //SEND Metadata TO DB
             const metadata: FileMetadata = {
+                id: null,
                 name: file.name,
-                //TODO
-                S3uniqueName: "CLUSTER_NAME/" + uuidv4(),
+                // @ts-ignore
+                S3uniqueName: this.props.match.params.clusterId + "/" + uuidv4(),
                 cloud: "AWS",
                 ownedBy: defaultTagValue1,
                 uploadedBy: defaultTagValue2,
@@ -115,28 +206,60 @@ export default class UploadFile extends React.Component {
                 tagsValues: userTagsValues,
             };
 
+            this.checkStorageSizeLimitation(metadata.sizeOfFile_MB).then( () => {
 
-            fetch('/db/create',{
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                    // 'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: JSON.stringify(metadata)
-            })
-                .then(res => {
-                    console.log(res)
-                    res.json().then(jsonRes => {
+                if (!this.state.canUpload) {
+                    //TODO beautiful error message with offer to buy some free space
+                    alert("You have acceded your storage limit. Please, buy some more!")
+                    return
+                }
+
+                const {authToken, idToken, loading} = this.props;
+
+                const fetchParams: FetchParams = {
+                    url: '/files/metadata/create',
+                    authToken: authToken,
+                    idToken: idToken,
+                    method: 'POST',
+                    body: metadata,
+
+                    actionDescription: "create file metadata"
+                }
+
+                makeFetch<any>(fetchParams).then(fileInfo => {
+                    console.log(fileInfo)
+                    //Bound file to cluster in SUB table
+
+                    const file_cluster: File_ClusterSub = {
+                        fileId: fileInfo.id,
+                        // @ts-ignore
+                        clusterId: this.props.match.params.clusterId
+                    };
+
+
+                    const {authToken, idToken, loading} = this.props;
+
+                    const fetchParams: FetchParams = {
+                        url: '/file_cluster/create',
+                        authToken: authToken,
+                        idToken: idToken,
+                        method: 'POST',
+                        body: file_cluster,
+
+                        actionDescription: "create file-cluster sub"
+                    }
+
+                    makeFetch<any>(fetchParams).then(jsonRes => {
                         console.log(jsonRes)
-                    })
+                    }).catch(error => alert("ERROR: " + error))
 
-                    if(res.ok)
-                        alert("Successfully get the response from db")
-                    else alert("Error, see logs for more info")
-                })
-                .catch(error => alert("Fetch error: " + error))
-            ///^
+                }).catch(error => alert("ERROR: " + error))
 
+
+                }
+            )
+
+            //TODO turn upload on
             return;
 
             const params = {
@@ -302,7 +425,7 @@ export default class UploadFile extends React.Component {
 
 
             <div>
-                <button onClick={this.uploadFile}>Upload</button>
+                <Button onClick={this.uploadFile} variant="primary">Upload File</Button>
             </div>
 
 
@@ -310,3 +433,5 @@ export default class UploadFile extends React.Component {
         );
     }
 }
+
+export default connect(mapStateToProps, mapDispatcherToProps)(UploadFile);

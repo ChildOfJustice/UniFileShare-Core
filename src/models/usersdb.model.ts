@@ -1,14 +1,24 @@
-export default function (sequelize:any, Sequelize:any, cognitoRolesDB:any) {
+export default function (sequelize:any, Sequelize:any, rolesDB:any) {
     const usersDB = sequelize.define("usersDB", {
         //Sequelize types: https://sequelize.org/v5/manual/data-types.html
-        cognitoUserGroupId: {
-            type: Sequelize.INTEGER(11),
-            unique: true
+        name: {
+            type: Sequelize.STRING(20),
+        },
+        cognitoUserId: {
+            type: Sequelize.STRING(50),
+            unique: true,
+            primaryKey: true,
+        },
+        roleId: {
+            type: Sequelize.INTEGER,
+        },
+        signUpDate: {
+            type: Sequelize.DATE
         }
 
     });
-    cognitoRolesDB.hasMany(usersDB, { foreignKey: 'cognitoUserGroupId' });
-    usersDB.belongsTo(cognitoRolesDB, { foreignKey: 'id' });
+    rolesDB.hasMany(usersDB, { foreignKey: 'roleId' });
+    usersDB.belongsTo(rolesDB, { foreignKey: 'roleId' });
 
     return usersDB
 }

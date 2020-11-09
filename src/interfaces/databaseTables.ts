@@ -1,4 +1,5 @@
 export interface FileMetadata {
+    id: number | null
     name: string
     S3uniqueName: string
     cloud: string
@@ -9,14 +10,25 @@ export interface FileMetadata {
     tagsValues: string[]
 }
 
-export interface Cluster {
-    id: string
-    owner_user_id: string
-    ownedBy: string
-    created: string
+export interface File_ClusterSub {
+    fileId: number
+    clusterId: string
 }
 
-export interface CognitoRole {
-    cognito_user_group: string
+export interface Cluster {
+    clusterId: number | null
+    name: string
+    ownerUserId: string
+    // createdDate: string
+}
+
+export interface Role {
     role: string
+}
+
+export interface CoUser {
+    coUserId: string
+    clusterId: number
+    permissions: string
+    permissionGiverUserId: string
 }
