@@ -1,10 +1,8 @@
 import * as express from 'express';
-import AuthMiddleWare from '../middleware/auth.middleware'
-
-import { Role } from '../interfaces/databaseTables'
 
 import db from "../models"
 import {User} from "../interfaces/user";
+import AuthMiddleWare from '../middleware/auth.middleware'
 
 const Usersdb = db.usersDB;
 const Op = db.SequelizeService.Op;
@@ -12,16 +10,17 @@ const Op = db.SequelizeService.Op;
 class UsersdbController {
     public path = '/users'
     public router = express.Router()
-    //private authMiddleWare: AuthMiddleWare
+
+    private authMiddleWare: AuthMiddleWare
 
     constructor() {
-        //this.authMiddleWare = new AuthMiddleWare()
+        this.authMiddleWare = new AuthMiddleWare()
         this.initRoutes()
     }
 
 
-    private initRoutes(){
-        //this.router.use(this.authMiddleWare.verifyToken)
+    private initRoutes() {
+        this.router.use(this.authMiddleWare.verifyToken)
 
         // Create a new note
         this.router.post("/create", this.create);
@@ -48,7 +47,7 @@ class UsersdbController {
     }
 
     // Create and Save a new note
-    create (req:any, res:any) {
+    create(req: any, res: any) {
 
         // Validate request
         //^
@@ -70,11 +69,11 @@ class UsersdbController {
             .then((data: never) => {
                 //res.send(JSON.stringify(data));
                 console.log("CREATED NEW USER: " + data)
-                if(res != null)
+                if (res != null)
                     res.send(data);
             })
             .catch((err: { message: string; }) => {
-                if(res != null)
+                if (res != null)
                     res.status(500).send({
                         message: err.message || "Some error occurred while creating the note."
                     });
@@ -83,7 +82,7 @@ class UsersdbController {
 
     // Retrieve all notes from the database.
     //We use req.query.title to get query string from the Request and consider it as condition for findAll() method.
-    findAll (req:any, res:any){
+    findAll(req: any, res: any) {
         const ownedBy = req.query.ownedBy;
         const condition = ownedBy ? {
             username: {
@@ -91,7 +90,7 @@ class UsersdbController {
             }
         } : null;
 
-        Usersdb.findAll({ where: condition })
+        Usersdb.findAll({where: condition})
             .then((data: any) => {
                 console.log("data: " + data)
                 res.send(data);
@@ -102,9 +101,10 @@ class UsersdbController {
                 });
             });
     }
+
 //
 // // Find a single User with an id
-    findOne (req: any, res: any) {
+    findOne(req: any, res: any) {
         const id = req.query.userId;
         const condition = id ? {
             cognitoUserId: id
@@ -155,6 +155,7 @@ class UsersdbController {
         //         });
         //     });
     };
+
 //
 // // Update a Tutorial by the id in the request
 // exports.update = (req, res) => {
@@ -207,6 +208,7 @@ class UsersdbController {
                 });
             });
     };
+
 //
 // // Delete all Tutorials from the database.
 // exports.deleteAll = (req, res) => {

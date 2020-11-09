@@ -12,23 +12,23 @@ const Op = db.SequelizeService.Op;
 class ClustersdbController {
     public path = '/clusters'
     public router = express.Router()
-    //private authMiddleWare: AuthMiddleWare
+    private authMiddleWare: AuthMiddleWare
 
     constructor() {
-        //this.authMiddleWare = new AuthMiddleWare()
+        this.authMiddleWare = new AuthMiddleWare()
         this.initRoutes()
     }
 
 
     private initRoutes(){
-        //this.router.use(this.authMiddleWare.verifyToken)
+        this.router.use(this.authMiddleWare.verifyToken)
 
         // Create a new note
         this.router.post("/create", this.create);
 
         // Retrieve all Tutorials
         this.router.get("/findAll", this.findAll);
-
+        this.router.post("/findAll", this.findAllWithIds)
         // // Retrieve all published Tutorials
         // router.get("/published", tutorials.findAllPublished);
         //
@@ -88,6 +88,24 @@ class ClustersdbController {
         } : null;
 
         Clustersdb.findAll({ where: condition })
+            .then((data: any) => {
+                console.log("data: " + data)
+                res.send(data);
+            })
+            .catch((err: { message: string; }) => {
+                res.status(500).send({
+                    message: err.message || "Some error occurred while retrieving tutorials."
+                });
+            });
+    }
+
+    findAllWithIds (req:any, res:any){
+        console.log(JSON.stringify(req.body.clusterIds))
+        Clustersdb.findAll({ where: {
+                clusterId: {
+                    [Op.in]: req.body.clusterIds,
+                }
+            } })
             .then((data: any) => {
                 console.log("data: " + data)
                 res.send(data);

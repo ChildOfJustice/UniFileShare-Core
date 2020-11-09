@@ -13,16 +13,16 @@ const Op = db.SequelizeService.Op;
 class DatabaseController {
     public path = '/files/metadata'
     public router = express.Router()
-    //private authMiddleWare: AuthMiddleWare
+    private authMiddleWare: AuthMiddleWare
 
     constructor() {
-        //this.authMiddleWare = new AuthMiddleWare()
+        this.authMiddleWare = new AuthMiddleWare()
         this.initRoutes()
     }
 
 
     private initRoutes(){
-
+        this.router.use(this.authMiddleWare.verifyToken)
         // Create a new note
         this.router.post("/create", this.create);
 
