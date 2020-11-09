@@ -3,27 +3,25 @@ import * as React from "react";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 
-import { connect } from 'react-redux';
-import { IRootState } from '../../../store';
+import {connect} from 'react-redux';
+import {IRootState} from '../../../store';
+import {Dispatch} from 'redux';
+import * as storeService from '../../../store/demo/store.service'
+import {DemoActions} from '../../../store/demo/types';
+import {Table} from "react-bootstrap";
+import {LinkContainer} from "react-router-bootstrap";
+import Navbar from "react-bootstrap/Navbar";
+import {CoUser, FileMetadata} from "../../../interfaces/databaseTables";
+import * as AWS from "aws-sdk";
+import config from "../../../../util/config";
+import {decodeIdToken} from "../../../interfaces/user";
+import {History} from "history";
+import {FetchParams, makeFetch} from "../../Interface";
 
 const mapStateToProps = ({ demo }: IRootState) => {
     const { authToken, idToken, loading } = demo;
     return { authToken, idToken, loading };
 }
-
-import { Dispatch } from 'redux';
-import * as asyncactions from '../../../store/demo/async-actions';
-import * as tokensService from '../../../store/demo/tokens.service'
-import * as storeService from '../../../store/demo/store.service'
-import { DemoActions } from '../../../store/demo/types';
-import {NavItem, Table} from "react-bootstrap";
-import {LinkContainer} from "react-router-bootstrap";
-import Navbar from "react-bootstrap/Navbar";
-import {Cluster, CoUser, File_ClusterSub, FileMetadata} from "../../../interfaces/databaseTables";
-import * as AWS from "aws-sdk";
-import config from "../../../../util/config";
-import {decodeIdToken} from "../../../interfaces/user";
-import {History} from "history";
 
 
 //to use any action you need to add dispatch as an argument to a function!!
@@ -73,9 +71,6 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
 
     async componentDidMount() {
 
-
-        // @ts-ignore
-        //alert("!!!!=> " + this.props.match.params.clusterId)
         await this.props.loadStore()
         await decodeIdToken(this.props.idToken).then(userid => this.setState({userId: userid}))
         // @ts-ignore
@@ -123,47 +118,41 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
         // @ts-ignore
         var clusterId_ = this.props.match.params.clusterId
 
-        fetch('/file_cluster/delete?fileId='+fileId+"&clusterId="+clusterId_, {
+        const { authToken, idToken, loading} = this.props;
+
+        const fetchParams: FetchParams = {
+            url: '/file_cluster/delete?fileId='+fileId+"&clusterId="+clusterId_,
+            authToken: authToken,
+            idToken: idToken,
             method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-                // 'Content-Type': 'application/x-www-form-urlencoded',
+            body: null,
+
+            actionDescription: "delete file-cluster note"
+        }
+
+        makeFetch<string>(fetchParams).then(jsonRes => {
+            console.log(jsonRes)
+            console.log("Successfully deleted file-cluster")
+
+            const fetchParams: FetchParams = {
+                url: '/files/metadata/delete?id='+fileId,
+                authToken: authToken,
+                idToken: idToken,
+                method: 'DELETE',
+                body: null,
+
+                actionDescription: "delete file metadata"
             }
-        })
-            .then(res => {
-                res.json().then(jsonRes => {
-                    console.log(jsonRes)
-                })
 
-                if (res.ok) {
-                    console.log("Successfully deleted file-cluster")
+            makeFetch<string>(fetchParams).then(jsonRes => {
+                console.log(jsonRes)
+                console.log("Successfully deleted file metadata")
+                // @ts-ignore
+                this.loadFilesMetadata(this.props.match.params.clusterId)
+            }).catch(error => alert("ERROR: " + error))
 
-                    fetch('/files/metadata/delete?id='+fileId, {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json'
-                            // 'Content-Type': 'application/x-www-form-urlencoded',
-                        }
-                    })
-                        .then(res => {
-                            res.json().then(jsonRes => {
-                                console.log(jsonRes)
-                            })
-
-                            if (res.ok) {
-                                console.log("Successfully deleted file metadata")
-                                // @ts-ignore
-                                this.loadFilesMetadata(this.props.match.params.clusterId)
-                            }
-                            else alert("Error, see logs for more info")
-                        })
-                        .catch(error => alert("Fetch error: " + error))
-                    ///^
-                }
-                else alert("Error, see logs for more info")
-            })
-            .catch(error => alert("Fetch error: " + error))
-        ///^
+            ///^
+        }).catch(error => alert("ERROR: " + error))
     }
 
     downloadFile = (fileName:string, cloud:string) => {
@@ -261,50 +250,43 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
     }
 
     loadFilesMetadata = (clusterId: number) => {
+        const { authToken, idToken, loading} = this.props;
 
-        fetch('/files/metadata/findAll?clusterId='+clusterId,{
+        const fetchParams: FetchParams = {
+            url: '/files/metadata/findAll?clusterId='+clusterId,
+            authToken: authToken,
+            idToken: idToken,
             method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-                // 'Content-Type': 'application/x-www-form-urlencoded',
-            }
-        })
-            .then(res => {
-                //console.log(res)
-                res.json().then(jsonRes => {
-                    console.log(jsonRes)
-                    this.setState({files: jsonRes})
-                })
+            body: null,
 
-                if(res.ok)
-                    console.log("Successfully get all nodes from db")
-                else alert("Error, see logs for more info")
-            })
-            .catch(error => alert("Fetch error: " + error))
+            actionDescription: "load files metadata"
+        }
+
+        makeFetch<any>(fetchParams).then(jsonRes => {
+            console.log(jsonRes)
+            this.setState({files: jsonRes})
+        }).catch(error => alert("ERROR: " + error))
+
     }
 
     getAllCousers = (clusterId: number) => {
+        const { authToken, idToken, loading} = this.props;
 
-        fetch('/cousers/findAll?clusterId='+clusterId,{
+        const fetchParams: FetchParams = {
+            url: '/cousers/findAll?clusterId='+clusterId,
+            authToken: authToken,
+            idToken: idToken,
             method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-                // 'Content-Type': 'application/x-www-form-urlencoded',
-            }
-        })
-            .then(res => {
-                //console.log(res)
-                res.json().then(jsonRes => {
-                    console.log("CO USERS:")
-                    console.log(jsonRes)
-                    this.setState({coUsers: jsonRes})
-                })
+            body: null,
 
-                if(res.ok)
-                    console.log("Successfully get all nodes from db")
-                else alert("Error, see logs for more info")
-            })
-            .catch(error => alert("Fetch error: " + error))
+            actionDescription: "get all co-users"
+        }
+
+        makeFetch<any>(fetchParams).then(jsonRes => {
+            console.log(jsonRes)
+            this.setState({coUsers: jsonRes})
+        }).catch(error => alert("ERROR: " + error))
+
     }
     getCurrentUserPermissions = () => {
         if(this.state.userId == ''){
@@ -313,49 +295,47 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
 
         let gotPerms = false
 
-        // @ts-ignore
-        fetch('/clusters/?clusterId='+this.props.match.params.clusterId, {
+        const { authToken, idToken, loading} = this.props;
+
+        const fetchParams: FetchParams = {
+            // @ts-ignore
+            url: '/clusters/?clusterId='+this.props.match.params.clusterId,
+            authToken: authToken,
+            idToken: idToken,
             method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-                // 'Content-Type': 'application/x-www-form-urlencoded',
+            body: null,
+
+            actionDescription: "get owner user id for the cluster"
+        }
+
+        makeFetch<any>(fetchParams).then(jsonRes => {
+            console.log(jsonRes)
+            if(jsonRes[0].ownerUserId == this.state.userId){
+                this.setState({permissions: "1111"})
+                gotPerms = true
             }
-        })
-            .then(res => {
-                res.json().then(jsonRes => {
+            if(!gotPerms) {
+                const { authToken, idToken, loading} = this.props;
+
+                const fetchParams: FetchParams = {
+                    // @ts-ignore
+                    url: '/cousers/getPermissions?userId=' + this.state.userId + '&clusterId=' + this.props.match.params.clusterId,
+                    authToken: authToken,
+                    idToken: idToken,
+                    method: 'GET',
+                    body: null,
+
+                    actionDescription: "get permissions"
+                }
+
+                makeFetch<any>(fetchParams).then(jsonRes => {
                     console.log(jsonRes)
-                    if(jsonRes[0].ownerUserId == this.state.userId){
-                        this.setState({permissions: "1111"})
-                        gotPerms = true
-                    }
-                    if(!gotPerms) {
-                        // @ts-ignore
-                        fetch('/cousers/getPermissions?userId=' + this.state.userId + '&clusterId=' + this.props.match.params.clusterId, {
-                            method: 'GET',
-                            headers: {
-                                'Content-Type': 'application/json'
-                                // 'Content-Type': 'application/x-www-form-urlencoded',
-                            }
-                        })
-                            .then(res => {
-                                res.json().then(jsonRes => {
-                                    console.log(jsonRes)
-                                    this.setState({permissions: jsonRes[0].permissions})
-                                })
+                    this.setState({permissions: jsonRes[0].permissions})
+                }).catch(error => alert("ERROR: " + error))
 
-                                if (res.ok)
-                                    console.log("Successfully get all nodes from db")
-                                else alert("Error, see logs for more info")
-                            })
-                            .catch(error => alert("Fetch error: " + error))
-                    }
-                })
+            }
+        }).catch(error => alert("ERROR: " + error))
 
-                if (res.ok)
-                    console.log("Successfully get all nodes from db")
-                else alert("Error, see logs for more info")
-            })
-            .catch(error => alert("Fetch error: " + error))
     }
     shareCluster = () => {
         const downloadPerm = this.state.downloadPermissionCheckboxChecked ? 1 : 0;
@@ -370,29 +350,24 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
             coUserId: this.state.coUserId,
             permissions: permissions,
         }
+        const { authToken, idToken, loading} = this.props;
 
-        fetch('/cousers/create', {
+        const fetchParams: FetchParams = {
+            url: '/cousers/create',
+            authToken: authToken,
+            idToken: idToken,
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-                // 'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: JSON.stringify(coUserData)
-        })
-            .then(res => {
-                res.json().then(jsonRes => {
-                    console.log(jsonRes)
-                })
+            body: coUserData,
 
-                if (res.ok) {
-                    console.log("Successfully created new coUser")
+            actionDescription: "create co-user"
+        }
 
-                    // @ts-ignore
-                    this.getAllCousers(this.props.match.params.clusterId);
-                }
-                else alert("Error, see logs for more info")
-            })
-            .catch(error => alert("Fetch error: " + error))
+        makeFetch<any>(fetchParams).then(jsonRes => {
+            console.log(jsonRes)
+            // @ts-ignore
+            this.getAllCousers(this.props.match.params.clusterId);
+        }).catch(error => alert("ERROR: " + error))
+
     }
     deleteCouser = (couserId: string) => {
         let coUserData: CoUser = {
@@ -402,26 +377,22 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
             coUserId: couserId,
             permissions: "",
         }
+        const { authToken, idToken, loading} = this.props;
 
-        fetch('/cousers/delete?clusterId='+coUserData.clusterId+"&coUserId="+couserId, {
+        const fetchParams: FetchParams = {
+            url: '/cousers/delete?clusterId='+coUserData.clusterId+"&coUserId="+couserId,
+            authToken: authToken,
+            idToken: idToken,
             method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-                // 'Content-Type': 'application/x-www-form-urlencoded',
-            }
-        })
-            .then(res => {
-                res.json().then(jsonRes => {
-                    console.log(jsonRes)
-                })
+            body: null,
 
-                if (res.ok) {
-                    console.log("Successfully deleted coUser")
-                    this.getAllCousers(coUserData.clusterId)
-                }
-                else alert("Error with deleting couser")
-            })
-            .catch(error => alert("Fetch error: " + error))
+            actionDescription: "delete co-user"
+        }
+
+        makeFetch<any>(fetchParams).then(jsonRes => {
+            console.log(jsonRes)
+            this.getAllCousers(coUserData.clusterId)
+        }).catch(error => alert("ERROR: " + error))
     }
 
     _onChangeCoUserId = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -514,6 +485,11 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
                             You can Delete files<br/>
                         </div>
                         : ''}
+                    {(this.state.permissions[3] == '1') ?
+                        <div>
+                            You can give permissions to other users<br/>
+                        </div>
+                        : ''}
 
                     <this.UploadPanel canUpload={this.state.permissions[1] == "1"}/>
                     <br/>
@@ -572,6 +548,7 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
                     </Table>
 
                     This cluster is shared with: <br/>
+                    {(this.state.permissions[3] == '1') ?
                     <Table striped bordered hover variant="light">
                         <thead>
                         <tr>
@@ -606,6 +583,7 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
 
                         </tbody>
                     </Table>
+                        : 'You do not have permissions to see this.'}
                 </div>
             }
         </div>

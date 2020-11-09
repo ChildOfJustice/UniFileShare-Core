@@ -12,6 +12,7 @@ import * as storeService from "../../../store/demo/store.service";
 import {decodeIdToken} from "../../../interfaces/user";
 import {connect} from "react-redux";
 import Button from "react-bootstrap/Button";
+import {FetchParams, makeFetch} from "../../Interface";
 
 ///CONFIG
 //AZURE:
@@ -64,32 +65,53 @@ class UploadFile extends React.Component<ReduxType, IState> {
 
     async checkStorageSizeLimitation(fileSize: number) {
 
-        let res = await fetch('/files/metadata/calcUsedSize?ownerUserId='+this.state.userId, {
+
+        const {authToken, idToken, loading} = this.props;
+//TODO OWNER OF THE CLUSTER!!!
+
+
+        let clusterOwnerUserId = ""
+
+        let fetchParams: FetchParams = {
+            // @ts-ignore
+            url: '/clusters?clusterId='+this.props.match.params.clusterId,
+            authToken: authToken,
+            idToken: idToken,
             method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-                // 'Content-Type': 'application/x-www-form-urlencoded',
-            }
-        })
+            body: null,
 
-        let jsonRes = await res.json()
-
-        console.log(jsonRes)
-        if(jsonRes[0].usedStorageSize == null) {
-            //alert("There is no info about your used storage size. Please, contact the administrator.")
-            this.setState({canUpload: true})
+            actionDescription: "get cluster to check available storage size"
         }
-        else {
-            if(fileSize + jsonRes[0].usedStorageSize < config.AppConfig.maxUserStorageSize_MB)
+
+        await makeFetch<any>(fetchParams).then(jsonRes => {
+            console.log(jsonRes)
+            clusterOwnerUserId = jsonRes[0].ownerUserId
+        }).catch(error => alert("ERROR: " + error))
+
+
+
+
+        fetchParams = {
+            url: '/files/metadata/calcUsedSize?ownerUserId='+clusterOwnerUserId,
+            authToken: authToken,
+            idToken: idToken,
+            method: 'GET',
+            body: null,
+
+            actionDescription: "get used storage size"
+        }
+
+        await makeFetch<any>(fetchParams).then(jsonRes => {
+            console.log(jsonRes)
+            if(jsonRes[0].usedStorageSize == null) {
+                //alert("There is no info about your used storage size. Please, contact the administrator.")
                 this.setState({canUpload: true})
-        }
-
-        if (res.ok){
-            console.log("Successfully get used storage size")
-        }
-        else {
-            alert("Error, see logs for more info")
-        }
+            }
+            else {
+                if(fileSize + jsonRes[0].usedStorageSize < config.AppConfig.maxUserStorageSize_MB)
+                    this.setState({canUpload: true})
+            }
+        }).catch(error => alert("ERROR: " + error))
     }
 
      uploadFile = () => {
@@ -192,56 +214,48 @@ class UploadFile extends React.Component<ReduxType, IState> {
                     return
                 }
 
+                const {authToken, idToken, loading} = this.props;
 
-                fetch('/files/metadata/create', {
+                const fetchParams: FetchParams = {
+                    url: '/files/metadata/create',
+                    authToken: authToken,
+                    idToken: idToken,
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                        // 'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: JSON.stringify(metadata)
-                })
-                    .then(res => {
-                        console.log(res)
-                        res.json().then(fileInfo => {
-                            console.log(fileInfo)
-                            //Boud file to cluster in SUB table
+                    body: metadata,
 
-                            const file_cluster: File_ClusterSub = {
-                                fileId: fileInfo.id,
-                                // @ts-ignore
-                                clusterId: this.props.match.params.clusterId
-                            };
+                    actionDescription: "create file metadata"
+                }
+
+                makeFetch<any>(fetchParams).then(fileInfo => {
+                    console.log(fileInfo)
+                    //Bound file to cluster in SUB table
+
+                    const file_cluster: File_ClusterSub = {
+                        fileId: fileInfo.id,
+                        // @ts-ignore
+                        clusterId: this.props.match.params.clusterId
+                    };
 
 
-                            fetch('/file_cluster/create', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                    // 'Content-Type': 'application/x-www-form-urlencoded',
-                                },
-                                body: JSON.stringify(file_cluster)
-                            })
-                                .then(res => {
-                                    console.log(res)
-                                    res.json().then(jsonRes => {
-                                        console.log(jsonRes)
-                                    })
+                    const {authToken, idToken, loading} = this.props;
 
-                                    if (res.ok)
-                                        console.log("Successfully get the response from db")
-                                    else alert("Error, see logs for more info")
-                                })
-                                .catch(error => alert("Fetch error: " + error))
-                            ///^
-                        })
+                    const fetchParams: FetchParams = {
+                        url: '/file_cluster/create',
+                        authToken: authToken,
+                        idToken: idToken,
+                        method: 'POST',
+                        body: file_cluster,
 
-                        if (res.ok)
-                            alert("Successfully get the response from db")
-                        else alert("Error, see logs for more info")
-                    })
-                    .catch(error => alert("Fetch error: " + error))
-                ///^
+                        actionDescription: "create file-cluster sub"
+                    }
+
+                    makeFetch<any>(fetchParams).then(jsonRes => {
+                        console.log(jsonRes)
+                    }).catch(error => alert("ERROR: " + error))
+
+                }).catch(error => alert("ERROR: " + error))
+
+
                 }
             )
 

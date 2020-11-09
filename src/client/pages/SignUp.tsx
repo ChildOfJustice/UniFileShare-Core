@@ -3,23 +3,21 @@ import * as React from "react";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 
-import { connect } from 'react-redux';
-import { IRootState } from '../../store';
-import exp = require("constants");
-import { History } from 'history';
+import {connect} from 'react-redux';
+import {IRootState} from '../../store';
+import {History} from 'history';
 import {User} from "../../interfaces/user";
-
-const mapStateToProps = ({ demo }: IRootState) => {
-    const { authToken, idToken, loading } = demo;
-    return { authToken, idToken, loading };
-}
-
-import { Dispatch } from 'redux';
-import * as asyncactions from '../../store/demo/async-actions';
+import {Dispatch} from 'redux';
 import * as tokensService from '../../store/demo/tokens.service'
 import * as storeService from '../../store/demo/store.service'
-import { DemoActions } from '../../store/demo/types';
+import {DemoActions} from '../../store/demo/types';
 import config from "../../../util/config";
+import {FetchParams, makeFetch} from "../Interface";
+
+const mapStateToProps = ({demo}: IRootState) => {
+    const {authToken, idToken, loading} = demo;
+    return {authToken, idToken, loading};
+}
 
 //to use any action you need to add dispatch as an argument to a function!!
 const mapDispatcherToProps = (dispatch: Dispatch<DemoActions>) => {
@@ -30,10 +28,12 @@ const mapDispatcherToProps = (dispatch: Dispatch<DemoActions>) => {
         saveStore: () => storeService.saveStore(dispatch),
     }
 }
+
 interface IProps {
-    history : History
+    history: History
     /* other props for ChildComponent */
 }
+
 type ReduxType = IProps & ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatcherToProps>;
 
 interface IState {
@@ -49,7 +49,7 @@ class SignUp extends React.Component<ReduxType, IState> {
     fetchesService: any
 
     // Initialize the state
-    constructor(props: ReduxType){
+    constructor(props: ReduxType) {
         super(props);
 
         this.state = {
@@ -74,88 +74,86 @@ class SignUp extends React.Component<ReduxType, IState> {
             email: this.email,
         }
 
-        fetch('/auth/signUp',{
+
+        const {authToken, idToken, loading} = this.props;
+
+        const fetchParams: FetchParams = {
+            url: '/auth/signUp',
+            authToken: "",
+            idToken: "",
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-                // 'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: JSON.stringify(userData)
-        })
-            .then(res => {
+            body: userData,
 
-                res.json().then(jsonRes => {
-                    console.log(jsonRes)
-                    if (res.ok) {
-                        userCognitoId = jsonRes.data.UserSub
+            actionDescription: "sign up"
+        }
 
-                        if(userCognitoId == null){
-                            alert("ERROR WITH COGNITO")
-                            return
-                        }
+        makeFetch<any>(fetchParams).then(jsonRes => {
+            console.log(jsonRes)
+            userCognitoId = jsonRes.data.UserSub
 
-                        //add to the database
-                        const userData2: User = {
-                            name: this.userName,
-                            roleId: config.AppConfig.RolesIds.user,
-                            cognitoUserId: userCognitoId,
-                            signUpDate: Date()
-                        }
+            if (userCognitoId == null) {
+                alert("ERROR WITH COGNITO")
+                return
+            }
 
-                        fetch('/users/create',{
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                                // 'Content-Type': 'application/x-www-form-urlencoded',
-                            },
-                            body: JSON.stringify(userData2)
-                        })
-                            .then(res => {
+            //add to the database
+            const userData2: User = {
+                name: this.userName,
+                roleId: config.AppConfig.RolesIds.user,
+                cognitoUserId: userCognitoId,
+                signUpDate: Date()
+            }
 
-                                res.json().then(jsonRes => {
 
-                                    if (res.ok) {
-                                        alert("Successfully signed you up, now ask the Administrator to confirm your account.")
-                                        this.props.history.push("/")
-                                    } else alert("Error with DB, see logs for more info")
-                                })
-                            })
-                            .catch(error => alert("Fetch error: " + error))
+            const {authToken, idToken, loading} = this.props;
 
-                        //add tokens to the store and redirect to the client page
-                        //TODO YOU NEED TO CONFIRM THE USER <----(!) and then you will be able to sign in after sigh up
-                        // fetch('/auth/signIn',{
-                        //     method: 'POST',
-                        //     headers: {
-                        //         'Content-Type': 'application/json'
-                        //         // 'Content-Type': 'application/x-www-form-urlencoded',
-                        //     },
-                        //     body: JSON.stringify(userData)
-                        // })
-                        //     .then(res => res.json()
-                        //     )
-                        //     .then(data => {
-                        //         console.log("JSON res: " + data.data.AuthenticationResult)
-                        //         // @ts-ignore
-                        //
-                        //
-                        //         // @ts-ignore
-                        //         this.props.setAuthToken(data.data.AuthenticationResult.AccessToken)
-                        //         this.props.setIdToken(data.data.AuthenticationResult.IdToken)
-                        //         this.props.saveStore()
-                        //
-                        //         this.props.history.push("/private/area")
-                        //         // if(res.ok)
-                        //         //     alert("Successfully signed in")
-                        //         // else alert("Error, see logs for more info")
-                        //
-                        //     })
-                        //     .catch(error => alert("Fetch error: " + error))
-                    } else alert("Error, see logs for more info")
-                })
-            })
-            .catch(error => alert("Fetch error: " + error))
+            const fetchParams: FetchParams = {
+                url: '/users/create',
+                authToken: authToken,
+                idToken: idToken,
+                method: 'POST',
+                body: userData2,
 
+                actionDescription: "create user"
+            }
+
+            makeFetch<any>(fetchParams).then(jsonRes => {
+                console.log(jsonRes)
+                alert("Successfully signed you up, now ask the Administrator to confirm your account.")
+                this.props.history.push("/")
+            }).catch(error => alert("ERROR: " + error))
+
+
+            //add tokens to the store and redirect to the client page
+            //TODO YOU NEED TO CONFIRM THE USER <----(!) and then you will be able to sign in after sigh up
+            // fetch('/auth/signIn',{
+            //     method: 'POST',
+            //     headers: {
+            //         'Content-Type': 'application/json'
+            //         // 'Content-Type': 'application/x-www-form-urlencoded',
+            //     },
+            //     body: JSON.stringify(userData)
+            // })
+            //     .then(res => res.json()
+            //     )
+            //     .then(data => {
+            //         console.log("JSON res: " + data.data.AuthenticationResult)
+            //         // @ts-ignore
+            //
+            //
+            //         // @ts-ignore
+            //         this.props.setAuthToken(data.data.AuthenticationResult.AccessToken)
+            //         this.props.setIdToken(data.data.AuthenticationResult.IdToken)
+            //         this.props.saveStore()
+            //
+            //         this.props.history.push("/private/area")
+            //         // if(res.ok)
+            //         //     alert("Successfully signed in")
+            //         // else alert("Error, see logs for more info")
+            //
+            //     })
+            //     .catch(error => alert("Fetch error: " + error))
+        }).catch(error => alert("ERROR: " + error))
     }
 
     _onChangeUserName = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -175,15 +173,15 @@ class SignUp extends React.Component<ReduxType, IState> {
             <Form>
                 <Form.Group controlId="formBasicEmail">
                     <Form.Label>Email address</Form.Label>
-                    <Form.Control onChange={this._onChangeEmail} type="email" placeholder="Enter email" />
+                    <Form.Control onChange={this._onChangeEmail} type="email" placeholder="Enter email"/>
                 </Form.Group>
                 <Form.Group controlId="formBasicUserName">
                     <Form.Label>UserName</Form.Label>
-                    <Form.Control onChange={this._onChangeUserName} type="string" placeholder="Your username" />
+                    <Form.Control onChange={this._onChangeUserName} type="string" placeholder="Your username"/>
                 </Form.Group>
                 <Form.Group controlId="formBasicPassword">
                     <Form.Label>Password</Form.Label>
-                    <Form.Control onChange={this._onChangePassword} type="password" placeholder="Password" />
+                    <Form.Control onChange={this._onChangePassword} type="password" placeholder="Password"/>
                 </Form.Group>
 
                 <Button onClick={this.signUp} variant="primary" type="submit">Sign Up</Button>

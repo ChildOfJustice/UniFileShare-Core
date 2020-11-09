@@ -30,15 +30,14 @@ class HomeController {
         //res.json(msg);
         //console.log('Sent the msg!');
 
-        //TODO DELETE THIS IF EVERYTHING IS WORKING
-        db.sequelizeEntity.query(req.body).then((data: any) => {
-            res.send(data);
-        })
-        .catch((err: { message: string; }) => {
-            res.status(500).send({
-                message: err.message || "Some error occurred while making admin query."
-            });
-        });
+        // db.sequelizeEntity.query(req.body).then((data: any) => {
+        //     res.send(data);
+        // })
+        // .catch((err: { message: string; }) => {
+        //     res.status(500).send({
+        //         message: err.message || "Some error occurred while making admin query."
+        //     });
+        // });
     }
 
     uploadFile(req: Request, res: Response){

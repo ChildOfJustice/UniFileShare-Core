@@ -11,16 +11,16 @@ const Op = db.SequelizeService.Op;
 class File_ClusterdbController {
     public path = '/file_cluster'
     public router = express.Router()
-    //private authMiddleWare: AuthMiddleWare
+    private authMiddleWare: AuthMiddleWare
 
     constructor() {
-        //this.authMiddleWare = new AuthMiddleWare()
+        this.authMiddleWare = new AuthMiddleWare()
         this.initRoutes()
     }
 
 
     private initRoutes(){
-        //this.router.use(this.authMiddleWare.verifyToken)
+        this.router.use(this.authMiddleWare.verifyToken)
 
         // Create a new note
         this.router.post("/create", this.create);

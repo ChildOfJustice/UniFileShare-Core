@@ -11,15 +11,12 @@ import {DemoActions} from '../../../store/demo/types';
 import {Table} from "react-bootstrap";
 import {LinkContainer} from "react-router-bootstrap";
 import {Cluster, FileMetadata} from "../../../interfaces/databaseTables";
-import * as jwt from "jsonwebtoken";
-import AuthMiddleware from "../../../middleware/auth.middleware";
 import config from "../../../../util/config";
-import * as jwkToPem from "jwk-to-pem";
 import {decodeIdToken} from "../../../interfaces/user";
-import ClusterOverview from "./ClusterOverview";
 import * as AWS from "aws-sdk";
 import {History} from "history";
 import CognitoService from "../../../services/cognito.service";
+import {FetchParams, makeFetch} from "../../Interface";
 
 const mapStateToProps = ({demo}: IRootState) => {
     const {authToken, idToken, loading} = demo;
@@ -35,7 +32,7 @@ const mapDispatcherToProps = (dispatch: Dispatch<DemoActions>) => {
 }
 
 interface IProps {
-    history : History
+    history: History
     /* other props for ChildComponent */
 }
 
@@ -65,7 +62,6 @@ class PersonalPage extends React.Component<ReduxType, IState> {
     }
 
 
-
     constructor(props: ReduxType) {
         super(props);
 
@@ -92,28 +88,24 @@ class PersonalPage extends React.Component<ReduxType, IState> {
             ownerUserId: this.state.userId,
         }
 
-        fetch('/clusters/create', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-                // 'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: JSON.stringify(clusterData)
-        })
-            .then(res => {
-                res.json().then(jsonRes => {
-                    console.log(jsonRes)
-                })
+        const { authToken, idToken, loading} = this.props;
 
-                if (res.ok) {
-                    console.log("Successfully created new cluster")
-                    this.getAllUserClusters()
-                }
-                else alert("Error, see logs for more info")
-            })
-            .catch(error => alert("Fetch error: " + error))
+        const fetchParams: FetchParams = {
+            url: '/clusters/create',
+            authToken: authToken,
+            idToken: idToken,
+            method: 'POST',
+            body: clusterData,
+
+            actionDescription: "create cluster"
+        }
+
+        makeFetch<any>(fetchParams).then(jsonRes => {
+            console.log(jsonRes)
+            this.getAllUserClusters()
+        }).catch(error => alert("ERROR: " + error))
     }
-    deleteFile = (S3uniqueName:string, fileId: number | null) => {
+    deleteFile = (S3uniqueName: string, fileId: number | null) => {
 
         AWS.config.update({
             region: config.AWS.S3.bucketRegion,
@@ -127,14 +119,13 @@ class PersonalPage extends React.Component<ReduxType, IState> {
             params: {Bucket: config.AWS.S3.bucketName}
         });
 
-        var params = {  Bucket: config.AWS.S3.bucketName, Key: S3uniqueName };
+        var params = {Bucket: config.AWS.S3.bucketName, Key: S3uniqueName};
 
-        s3.deleteObject(params, function(err, data) {
+        s3.deleteObject(params, function (err, data) {
             if (err) {
                 alert("Cannot delete this file from S3 bucket!")
                 console.log(err, err.stack);  // error
-            }
-            else {
+            } else {
                 console.log();
                 alert("File has been deleted.")
             }
@@ -142,137 +133,114 @@ class PersonalPage extends React.Component<ReduxType, IState> {
 
         // @ts-ignore
         var clusterId_ = this.props.match.params.clusterId
+        const { authToken, idToken, loading} = this.props;
 
-        fetch('/file_cluster/delete?fileId='+fileId+"&clusterId="+clusterId_, {
+        const fetchParams: FetchParams = {
+            url: '/file_cluster/delete?fileId=' + fileId + "&clusterId=" + clusterId_,
+            authToken: authToken,
+            idToken: idToken,
             method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-                // 'Content-Type': 'application/x-www-form-urlencoded',
+            body: null,
+
+            actionDescription: "delete file-cluster"
+        }
+
+        makeFetch<any>(fetchParams).then(jsonRes => {
+            console.log(jsonRes)
+
+            const { authToken, idToken, loading} = this.props;
+
+            const fetchParams: FetchParams = {
+                url: '/files/metadata/delete?id=' + fileId,
+                authToken: authToken,
+                idToken: idToken,
+                method: 'DELETE',
+                body: null,
+
+                actionDescription: "delete file"
             }
-        })
-            .then(res => {
-                res.json().then(jsonRes => {
-                    console.log(jsonRes)
-                })
 
-                if (res.ok) {
-                    console.log("Successfully deleted file-cluster")
+            makeFetch<any>(fetchParams).then(jsonRes => {
+                console.log(jsonRes)
+                // @ts-ignore
+                this.loadFilesMetadata(this.props.match.params.clusterId)
+            }).catch(error => alert("ERROR: " + error))
+        }).catch(error => alert("ERROR: " + error))
 
-                    fetch('/files/metadata/delete?id='+fileId, {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json'
-                            // 'Content-Type': 'application/x-www-form-urlencoded',
-                        }
-                    })
-                        .then(res => {
-                            res.json().then(jsonRes => {
-                                console.log(jsonRes)
-                            })
 
-                            if (res.ok) {
-                                console.log("Successfully deleted file metadata")
-                                // @ts-ignore
-                                this.loadFilesMetadata(this.props.match.params.clusterId)
-                            }
-                            else alert("Error, see logs for more info")
-                        })
-                        .catch(error => alert("Fetch error: " + error))
-                    ///^
-                }
-                else alert("Error, see logs for more info")
-            })
-            .catch(error => alert("Fetch error: " + error))
-        ///^
     }
 
-    async deleteCluster(clusterId: number | null){
+    async deleteCluster(clusterId: number | null) {
 
         var files: FileMetadata[]
 
-        //get all files stored in this cluster
-        await fetch('/files/metadata/findAll?clusterId='+clusterId,{
+        const { authToken, idToken, loading} = this.props;
+
+        let fetchParams: FetchParams = {
+            url: '/files/metadata/findAll?clusterId=' + clusterId,
+            authToken: authToken,
+            idToken: idToken,
             method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-                // 'Content-Type': 'application/x-www-form-urlencoded',
+            body: null,
+
+            actionDescription: "delete file"
+        }
+
+        await makeFetch<any>(fetchParams).then(jsonRes => {
+            console.log(jsonRes)
+            files = jsonRes
+            if (files.length != 0) {
+                alert("You need to delete all files first!")
+                return
             }
-        })
-            .then(res => {
-                //console.log(res)
-                res.json().then(jsonRes => {
-                    console.log(jsonRes)
-                    files = jsonRes
-                    if(files.length != 0){
-                        alert("You need to delete all files first!")
-                        return
-                    }
-                    //TODO use async and wait files to be deleted
-                    //delete each file from file-cluster table and from metadata table:
-                    files.forEach(file => {
-                        this.deleteFile(file.S3uniqueName, file.id)
-                    })
-
-
-
-                })
-
-                if(res.ok)
-                    console.log("Successfully get all nodes from db")
-                else alert("Error, see logs for more info")
+            //TODO use async and wait files to be deleted
+            //delete each file from file-cluster table and from metadata table:
+            files.forEach(file => {
+                this.deleteFile(file.S3uniqueName, file.id)
             })
-            .catch(error => alert("Fetch error: " + error))
+        }).catch(error => alert("ERROR: " + error))
+        //get all files stored in this cluster
 
 
 
         //delete cousers associated with this cluster
-        await fetch('/cousers/deleteAllAssociatedWithCluster?clusterId='+clusterId, {
+        fetchParams = {
+            url: '/cousers/deleteAllAssociatedWithCluster?clusterId=' + clusterId,
+            authToken: authToken,
+            idToken: idToken,
             method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-                // 'Content-Type': 'application/x-www-form-urlencoded',
-            }
-        })
-            .then(res => {
-                res.json().then(jsonRes => {
-                    console.log(jsonRes)
-                })
+            body: null,
 
-                if (res.ok) {
-                    console.log("Successfully deleted all cousers associated with the cluster")
-                    this.getAllUserClusters()
-                }
-                else alert("Error with deleting associated cousers")
-            })
-            .catch(error => alert("Fetch error: " + error))
+            actionDescription: "delete all associated co-users with the cluster"
+        }
+
+        await makeFetch<any>(fetchParams).then(jsonRes => {
+            console.log(jsonRes)
+        }).catch(error => alert("ERROR: " + error))
+
 
         //delete cluster
-        await fetch('/clusters/delete?clusterId='+clusterId, {
+        fetchParams = {
+            url: '/clusters/delete?clusterId=' + clusterId,
+            authToken: authToken,
+            idToken: idToken,
             method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-                // 'Content-Type': 'application/x-www-form-urlencoded',
-            }
-        })
-            .then(res => {
-                res.json().then(jsonRes => {
-                    console.log(jsonRes)
-                })
+            body: null,
 
-                if (res.ok) {
-                    console.log("Successfully deleted cluster")
-                    this.getAllUserClusters()
-                }
-                else alert("Error, see logs for more info")
-            })
-            .catch(error => alert("Fetch error: " + error))
+            actionDescription: "delete cluster"
+        }
+
+        await makeFetch<any>(fetchParams).then(jsonRes => {
+            console.log(jsonRes)
+            this.getAllUserClusters()
+        }).catch(error => alert("ERROR: " + error))
+
 
         this.props.history.push("/private/area")
-
     }
 
     async deleteUser() {
-        if(this.state.clusters.length != 0){
+        if (this.state.clusters.length != 0) {
             alert("You need to delete all clusters first!")
             return
         }
@@ -282,8 +250,8 @@ class PersonalPage extends React.Component<ReduxType, IState> {
 
         const cognito = new CognitoService();
         await cognito.deleteUser(this.props.authToken)
-            .then(promiseOutput =>{
-                if(promiseOutput.success){
+            .then(promiseOutput => {
+                if (promiseOutput.success) {
                     console.log("user successfully deleted: " + promiseOutput.msg)
                     // @ts-ignore
                     //userCognitoId = promiseOutput.msg.UserSub
@@ -294,130 +262,142 @@ class PersonalPage extends React.Component<ReduxType, IState> {
             });
 
         //delete user
-        await fetch('/users/delete?cognitoUserId='+this.state.userId, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-                // 'Content-Type': 'application/x-www-form-urlencoded',
-            }
-        })
-            .then(res => {
-                res.json().then(jsonRes => {
-                    console.log(jsonRes)
-                })
+        const { authToken, idToken, loading} = this.props;
 
-                if (res.ok) {
-                    console.log("Successfully deleted user")
-                    this.props.history.push("/")
-                }
-                else alert("Error, see logs for more info")
-            })
-            .catch(error => alert("Fetch error: " + error))
+        let fetchParams: FetchParams = {
+            url: '/users/delete?cognitoUserId=' + this.state.userId,
+            authToken: authToken,
+            idToken: idToken,
+            method: 'DELETE',
+            body: null,
+
+            actionDescription: "delete user"
+        }
+
+        await makeFetch<any>(fetchParams).then(jsonRes => {
+            console.log(jsonRes)
+            this.props.history.push("/")
+        }).catch(error => alert("ERROR: " + error))
     }
 
 
     getUserRole = () => {
-        if(this.state.userId == ''){
+        if (this.state.userId == '') {
             return
         }
-        fetch('/users/find?userId='+this.state.userId, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-                // 'Content-Type': 'application/x-www-form-urlencoded',
-            }
-        })
-            .then(res => {
-                res.json().then(jsonRes => {
-                    console.log(JSON.stringify(jsonRes))
-                    //alert(JSON.stringify(jsonRes));
-                    this.setState({userRole: jsonRes[0].role})
-                })
 
-                if (res.ok)
-                    console.log("Successfully get all nodes from db")
-                else alert("Error, see logs for more info")
-            })
-            .catch(error => alert("Fetch error: " + error))
+        const { authToken, idToken, loading} = this.props;
+
+        let fetchParams: FetchParams = {
+            url: '/users/find?userId=' + this.state.userId,
+            authToken: authToken,
+            idToken: idToken,
+            method: 'GET',
+            body: null,
+
+            actionDescription: "get user role"
+        }
+
+        makeFetch<any>(fetchParams).then(jsonRes => {
+            console.log(jsonRes)
+            //alert(JSON.stringify(jsonRes));
+            this.setState({userRole: jsonRes[0].role})
+        }).catch(error => alert("ERROR: " + error))
+
+
     }
 
     getAllUserClusters = () => {
-        if(this.state.userId == ''){
+        if (this.state.userId == '') {
             return
         }
-        fetch('/clusters/findAll?ownerUserId='+this.state.userId, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-                // 'Content-Type': 'application/x-www-form-urlencoded',
-            }
-        })
-            .then(res => {
-                res.json().then(jsonRes => {
-                    console.log(jsonRes)
-                    this.setState({clusters: jsonRes})
-                })
 
-                if (res.ok)
-                    console.log("Successfully get all nodes from db")
-                else alert("Error, see logs for more info")
-            })
-            .catch(error => alert("Fetch error: " + error))
+        const { authToken, idToken, loading} = this.props;
+
+        let fetchParams: FetchParams = {
+            url: '/clusters/findAll?ownerUserId=' + this.state.userId,
+            authToken: authToken,
+            idToken: idToken,
+            method: 'GET',
+            body: null,
+
+            actionDescription: "get all user's clusters"
+        }
+
+        makeFetch<any>(fetchParams).then(jsonRes => {
+            console.log(jsonRes)
+            this.setState({clusters: jsonRes})
+        }).catch(error => alert("ERROR: " + error))
     }
 
     getUsedStorageSize = () => {
 
-        fetch('/files/metadata/calcUsedSize?ownerUserId='+this.state.userId, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-                // 'Content-Type': 'application/x-www-form-urlencoded',
-            }
-        })
-            .then(res => {
-                res.json().then(jsonRes => {
-                    console.log(jsonRes)
-                    if(jsonRes[0].usedStorageSize == null)
-                        this.setState({usedStorageSize: 0})
-                    else this.setState({usedStorageSize: jsonRes[0].usedStorageSize})
-                })
+        const { authToken, idToken, loading} = this.props;
 
-                if (res.ok)
-                    console.log("Successfully get all nodes from db")
-                else alert("Error, see logs for more info")
-            })
-            .catch(error => alert("Fetch error: " + error))
+        let fetchParams: FetchParams = {
+            url: '/files/metadata/calcUsedSize?ownerUserId=' + this.state.userId,
+            authToken: authToken,
+            idToken: idToken,
+            method: 'GET',
+            body: null,
+
+            actionDescription: "get used storage size"
+        }
+
+        makeFetch<any>(fetchParams).then(jsonRes => {
+            console.log(jsonRes)
+            if (jsonRes[0].usedStorageSize == null)
+                this.setState({usedStorageSize: 0})
+            else this.setState({usedStorageSize: jsonRes[0].usedStorageSize})
+        }).catch(error => alert("ERROR: " + error))
     }
 
     makeAdminQuery = () => {
-        if(this.state.queryToDB == ''){
+        if (this.state.queryToDB == '') {
             return
         }
 
         const data = {
             query: this.state.queryToDB
         }
-        const { authToken, idToken, loading} = this.props;
-        fetch('/protected/adminQuery', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Auth': authToken,
-                'Identity': idToken
-            },
-            body: JSON.stringify(data)
-        })
-            .then(res => {
-                res.json().then(jsonRes => {
-                    console.log(jsonRes)
-                    this.setState({dbResponse: JSON.stringify(jsonRes[0])})
-                })
+        const {authToken, idToken, loading} = this.props;
 
-                if (res.ok)
-                    console.log("Successfully get all nodes from db")
-                else alert("Error, see logs for more info")
-            })
-            .catch(error => alert("Fetch error: " + error))
+        const fetchParams: FetchParams = {
+            url: '/protected/adminQuery',
+            authToken: authToken,
+            idToken: idToken,
+            method: 'POST',
+            body: data,
+
+            actionDescription: "admin query"
+        }
+
+        makeFetch<string>(fetchParams).then(jsonRes => {
+            console.log(jsonRes)
+            this.setState({dbResponse: JSON.stringify(jsonRes[0])})
+        }).catch(error => alert("ERROR: " + error))
+
+
+        // fetch('/protected/adminQuery', {
+        //     method: 'POST',
+        //     headers: {
+        //         'Content-Type': 'application/json',
+        //         'Auth': authToken,
+        //         'Identity': idToken
+        //     },
+        //     body: JSON.stringify(data)
+        // })
+        //     .then(res => {
+        //         res.json().then(jsonRes => {
+        //             console.log(jsonRes)
+        //             this.setState({dbResponse: JSON.stringify(jsonRes[0])})
+        //         })
+        //
+        //         if (res.ok)
+        //             console.log("Successfully get all nodes from db")
+        //         else alert("Error, see logs for more info")
+        //     })
+        //     .catch(error => alert("Fetch error: " + error))
     }
 
     _onChangeClusterName = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -429,7 +409,7 @@ class PersonalPage extends React.Component<ReduxType, IState> {
 
 
     // @ts-ignore
-    AdminPanel = ({ isAdmin }) => (
+    AdminPanel = ({isAdmin}) => (
         <div className="hello">
             {isAdmin ? <Form.Group controlId="adminPanel">
                 <Form.Label>Query to Database</Form.Label>
@@ -448,6 +428,14 @@ class PersonalPage extends React.Component<ReduxType, IState> {
         var counter = 0
 
         const PersonalPage = (
+
+            (this.state.userRole == 'NO_ROLE') ?
+                <div>
+                    Please login.<br/>
+                    ERROR 403
+                </div>
+                :
+
             <div>
                 Your user id is: "{this.state.userId}".<br/>
                 Your role is: "{this.state.userRole}".<br/>
@@ -460,8 +448,8 @@ class PersonalPage extends React.Component<ReduxType, IState> {
                 </Form.Group>
                 <Button onClick={this.createCluster} variant="primary">Create Cluster</Button>
 
-                <Button onClick={this.getAllUserClusters} variant="primary">Update clusters</Button>
-                
+                {/*<Button onClick={this.getAllUserClusters} variant="primary">Update clusters</Button>*/}
+
                 <this.AdminPanel isAdmin={this.state.userRole == "ADMINISTRATOR"}/>
 
                 <br/>

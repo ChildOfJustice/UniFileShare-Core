@@ -3,21 +3,20 @@ import * as React from "react";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 
-import { connect } from 'react-redux';
-import { IRootState } from '../../store';
-
-const mapStateToProps = ({ demo }: IRootState) => {
-    const { authToken, idToken, loading } = demo;
-    return { authToken, idToken, loading };
-}
-
-import { Dispatch } from 'redux';
-import * as asyncactions from '../../store/demo/async-actions';
+import {connect} from 'react-redux';
+import {IRootState} from '../../store';
+import {Dispatch} from 'redux';
 import * as tokensService from '../../store/demo/tokens.service'
 import * as storeService from '../../store/demo/store.service'
-import { DemoActions } from '../../store/demo/types';
+import {DemoActions} from '../../store/demo/types';
 
-import { History } from 'history';
+import {History} from 'history';
+import {FetchParams, makeFetch} from "../Interface";
+
+const mapStateToProps = ({demo}: IRootState) => {
+    const {authToken, idToken, loading} = demo;
+    return {authToken, idToken, loading};
+}
 
 
 //to use any action you need to add dispatch as an argument to a function!!
@@ -29,10 +28,12 @@ const mapDispatcherToProps = (dispatch: Dispatch<DemoActions>) => {
         saveStore: () => storeService.saveStore(dispatch),
     }
 }
+
 interface IProps {
-    history : History
+    history: History
     /* other props for ChildComponent */
 }
+
 type ReduxType = IProps & ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatcherToProps>;
 
 
@@ -54,112 +55,110 @@ class SignIn extends React.Component<ReduxType, IState> {
     }
 
     componentDidMount() {
-        //alert("ONLOAD!!")
         this.props.loadStore()
     }
 
     signIn = (event: any) => {
         event.preventDefault()
 
-        const { username, password } = this.state;
+        const {username, password} = this.state;
 
         let userData = {
             username: username,
             password: password,
         }
 
-        fetch('/auth/signIn',{
+
+
+        const fetchParams: FetchParams = {
+            url: '/auth/signIn',
+            authToken: "",
+            idToken: "",
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-                // 'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: JSON.stringify(userData)
-        })
-            .then(res => {
+            body: userData,
 
-                res.json().then(jsonRes => {
-                    console.log(jsonRes)
-                    if(res.status == 500){
-                        // @ts-ignore
-                        alert("Error: " + JSON.stringify(jsonRes["Internal server error"]))
-                    }
-                    console.log("JSON res: " + jsonRes.data.AuthenticationResult)
-                    // @ts-ignore
+            actionDescription: "sign in"
+        }
+
+        makeFetch<any>(fetchParams).then(jsonRes => {
+            console.log(jsonRes)
+            console.log("JSON res: " + jsonRes.data.AuthenticationResult)
+            // @ts-ignore
 
 
-                    // @ts-ignore
-                    this.props.setAuthToken(jsonRes.data.AuthenticationResult.AccessToken)
-                    this.props.setIdToken(jsonRes.data.AuthenticationResult.IdToken)
-                    this.props.saveStore()
-                    // @ts-ignore
-                    const { authToken, loading} = this.props;
+            // @ts-ignore
+            this.props.setAuthToken(jsonRes.data.AuthenticationResult.AccessToken)
+            this.props.setIdToken(jsonRes.data.AuthenticationResult.IdToken)
+            this.props.saveStore()
+            // @ts-ignore
+            const {authToken, loading} = this.props;
 
-                    //alert("Your access token is: " + authToken)
-                    this.props.history.push("/private/area")
-                    // if(res.ok)
-                    //     alert("Successfully signed in")
-                    // else alert("Error, see logs for more info")
-                })
-            })
+            //alert("Your access token is: " + authToken)
+            this.props.history.push("/private/area")
+            // if(res.ok)
+            //     alert("Successfully signed in")
+            // else alert("Error, see logs for more info")
+        }).catch(error => alert("ERROR: " + error))
 
-            //.catch(error => alert("Fetch error: " + error))
+
+
+        //.catch(error => alert("Fetch error: " + error))
 
         //browserHistory.push('/home');
     }
 
-    getAllNodesFromDB = (event: any) => {
-        event.preventDefault()
-
-
-        fetch('/files/metadata/findAll?username=TEST_USER',{
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-                // 'Content-Type': 'application/x-www-form-urlencoded',
-            }
-        })
-            .then(res => {
-                console.log(res)
-                res.json().then(jsonRes => {
-                    console.log(jsonRes)
-                })
-
-                if(res.ok)
-                    alert("Successfully get all nodes from db")
-                else alert("Error, see logs for more info")
-            })
-            .catch(error => alert("Fetch error: " + error))
-    }
-
-    makeRequest = (event: any) => {
-        event.preventDefault()
-        
-        // @ts-ignore
-        const { authToken, idToken, loading} = this.props;
-
-
-        fetch('/protected/secret',{
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Auth': authToken,
-                'Identity': idToken
-                // 'Content-Type': 'application/x-www-form-urlencoded',
-            }
-        })
-            .then(res => {
-                console.log(res)
-                res.json().then(jsonRes => {
-                    console.log(jsonRes)
-                })
-
-                if(res.ok)
-                    alert("Successfully get the secret")
-                else alert("Error, see logs for more info")
-            })
-            .catch(error => alert("Fetch error: " + error))
-    }
+    // getAllNodesFromDB = (event: any) => {
+    //     event.preventDefault()
+    //
+    //
+    //     fetch('/files/metadata/findAll?username=TEST_USER', {
+    //         method: 'GET',
+    //         headers: {
+    //             'Content-Type': 'application/json'
+    //             // 'Content-Type': 'application/x-www-form-urlencoded',
+    //         }
+    //     })
+    //         .then(res => {
+    //             console.log(res)
+    //             res.json().then(jsonRes => {
+    //                 console.log(jsonRes)
+    //             })
+    //
+    //             if (res.ok)
+    //                 alert("Successfully get all nodes from db")
+    //             else alert("Error, see logs for more info")
+    //         })
+    //         .catch(error => alert("Fetch error: " + error))
+    // }
+    //
+    // makeRequest = (event: any) => {
+    //     event.preventDefault()
+    //
+    //     // @ts-ignore
+    //     const {authToken, idToken, loading} = this.props;
+    //
+    //
+    //     fetch('/protected/secret', {
+    //         method: 'GET',
+    //         headers: {
+    //             'Content-Type': 'application/json',
+    //             'Auth': authToken,
+    //             'Identity': idToken
+    //             // 'Content-Type': 'application/x-www-form-urlencoded',
+    //         }
+    //     })
+    //         .then(res => {
+    //             console.log(res)
+    //             res.json().then(jsonRes => {
+    //                 console.log(jsonRes)
+    //             })
+    //
+    //             if (res.ok)
+    //                 alert("Successfully get the secret")
+    //             else alert("Error, see logs for more info")
+    //         })
+    //         .catch(error => alert("Fetch error: " + error))
+    // }
 
     _onChangeUserName = (e: React.ChangeEvent<HTMLInputElement>) => {
         this.setState({username: (e.target as HTMLInputElement).value})
@@ -171,27 +170,27 @@ class SignIn extends React.Component<ReduxType, IState> {
 
     //eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     render() {
-        const { authToken, loading } = this.props;
+        const {authToken, loading} = this.props;
 
         const signInPage = (
             <Form>
                 <div style={{margin: '20px'}}>
-                    <button onClick={this.makeRequest}>Make a request to secret page</button>
-                    <button onClick={this.getAllNodesFromDB}>Get all notes from DB</button>
-                    {loading && <div>Loading...</div>}
+                    {/*<button onClick={this.makeRequest}>Make a request to secret page</button>*/}
+                    {/*<button onClick={this.getAllNodesFromDB}>Get all notes from DB</button>*/}
+                    {/*{loading && <div>Loading...</div>}*/}
                     <ul>
-                        your auth token is: "{authToken}"
+                        {/*your auth token is: "{authToken}"*/}
                     </ul>
                 </div>
 
 
                 <Form.Group controlId="formBasicUserName">
                     <Form.Label>UserName</Form.Label>
-                    <Form.Control onChange={this._onChangeUserName} type="string" placeholder="Your username" />
+                    <Form.Control onChange={this._onChangeUserName} type="string" placeholder="Your username"/>
                 </Form.Group>
                 <Form.Group controlId="formBasicPassword">
                     <Form.Label>Password</Form.Label>
-                    <Form.Control onChange={this._onChangePassword} type="password" placeholder="Password" />
+                    <Form.Control onChange={this._onChangePassword} type="password" placeholder="Password"/>
                 </Form.Group>
 
                 <Button onClick={this.signIn} variant="primary" type="submit">Sign In</Button>

@@ -21,9 +21,9 @@ export default () => {
                 <LinkContainer to="/signUp">
                     <Button variant="primary">Sign Up</Button>
                 </LinkContainer>
-                <LinkContainer to="/test">
-                    <Button variant="primary">Test</Button>
-                </LinkContainer>
+                {/*<LinkContainer to="/test">*/}
+                {/*    <Button variant="primary">Test</Button>*/}
+                {/*</LinkContainer>*/}
             </p>
         </Jumbotron>
     );

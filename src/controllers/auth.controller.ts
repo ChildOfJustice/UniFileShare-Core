@@ -29,8 +29,8 @@ class AuthController {
     signUp(req: Request, res: Response){
 
         const result = validationResult(req);
-        console.log("SIGN UP REQUEST: ");
-        console.log(req.body);
+        //console.log("SIGN UP REQUEST: ");
+        //console.log(req.body);
         if(!result.isEmpty()){
             return res.status(422).json({errors: result.array()})
         }
@@ -69,7 +69,7 @@ class AuthController {
 
                     res.status(200).json({"data": promiseOutput.msg}).end()
                 } else {
-                    res.status(500).json({"Internal server error": promiseOutput.msg}).end()
+                    res.status(500).send({message: promiseOutput.msg})
                 }
             });
     }
@@ -77,8 +77,8 @@ class AuthController {
 
     signIn(req: Request, res: Response){
         const result = validationResult(req);
-        console.log("SIGN IN REQUEST: ");
-        console.log(req.body);
+        //console.log("SIGN IN REQUEST: ");
+        //console.log(req.body);
 
         if(!result.isEmpty()){
             return res.status(422).json({errors: result.array()})
@@ -95,7 +95,7 @@ class AuthController {
                 if(promiseOutput.success){
                     res.status(200).json({"data": promiseOutput.msg}).end()
                 } else {
-                    res.status(500).json({"Internal server error": promiseOutput.msg}).end()
+                    res.status(500).send({message: promiseOutput.msg})
                 }
             });
 
