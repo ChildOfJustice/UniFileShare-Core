@@ -3,11 +3,16 @@ import * as jwt from 'jsonwebtoken'
 import * as jwkToPem from 'jwk-to-pem'
 import * as fetch from 'node-fetch'
 import config from "../../util/config";
+import {User} from "../interfaces/user";
 
-let pems: any = {}
-let pems2: any = {}
+const pems: any = {}
+const pems2: any= {}
 
 class AuthMiddleware{
+    public static pems_: any
+    public static pems2_: any
+
+
     private userPoolId = config.userPoolId
     private userPoolRegion = config.userPoolRegion
 
@@ -24,9 +29,11 @@ class AuthMiddleware{
     //     }));
     // }
 
-    async verifyToken(req: Request, res: Response, next: () => void): Promise<void> {
+    public async verifyToken(req: Request, res: Response, next: () => void): Promise<void> {
         const token = req.header('Auth')
         const idToken = req.header('Identity')!
+
+        let _userInfo: User
 
         if(token == null) res.status(401).end()
         else {
@@ -72,6 +79,12 @@ class AuthMiddleware{
 
             console.log(`Decoded and verified id token from aws ${JSON.stringify(decodedIdToken)}`);
 
+            // _userInfo = {
+            //     // @ts-ignore
+            //     name: decodedIdToken["username"],
+            //     role: "A"
+            // }
+
             /*
           const pem = jwkToPem(jwk);
           const decodedIdToken = await jwt.verify(awsAuthorizationCodeResponse.data.id_token, pem, { algorithms: ['RS256'] });
@@ -113,7 +126,9 @@ class AuthMiddleware{
 
             }
 
-            console.log("got all pems")
+            AuthMiddleware.pems_ = pems
+            AuthMiddleware.pems2_ = pems2
+            console.log("got all pems: " + AuthMiddleware.pems_.toString())
         } catch (error) {
             console.log("cannot get pems")
             console.log(error)

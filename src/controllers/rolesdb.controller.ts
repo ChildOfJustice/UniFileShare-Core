@@ -1,27 +1,27 @@
 import * as express from 'express';
-import { Request, Response} from "express";
-import AuthMiddleWare from '../middleware/auth.middleware'
 
-import { CognitoRole } from '../interfaces/databaseTables'
+import {Role} from '../interfaces/databaseTables'
+import AuthMiddleWare from '../middleware/auth.middleware'
 
 import db from "../models"
 
-const CognitoRolesdb = db.cognitoRolesDB;
+const Rolesdb = db.rolesDB;
 const Op = db.SequelizeService.Op;
 
 class CognitoRolesdbController {
-    public path = '/cognitoRolesDB'
+    public path = '/cognitoRoles'
     public router = express.Router()
-    //private authMiddleWare: AuthMiddleWare
+    private authMiddleWare: AuthMiddleWare
 
     constructor() {
-        //this.authMiddleWare = new AuthMiddleWare()
+        this.authMiddleWare = new AuthMiddleWare()
         this.initRoutes()
+        // this.admin_create({cognito_user_group: "Admin", role: "ADMINISTRATOR"})
     }
 
 
-    private initRoutes(){
-        //this.router.use(this.authMiddleWare.verifyToken)
+    private initRoutes() {
+        this.router.use(this.authMiddleWare.verifyToken)
 
         // Create a new note
         this.router.post("/create", this.create);
@@ -46,28 +46,47 @@ class CognitoRolesdbController {
 
     }
 
+    // admin_create (req:any) {
+    //
+    //     // Create a note
+    //     const note: CognitoRole = {
+    //         // username: req.body.username,
+    //         // someReal: req.body.someReal,
+    //         // signUpDate: req.body.signUpDate
+    //         cognito_user_group: req.cognito_user_group,
+    //         role: req.role
+    //     };
+    //
+    //
+    //     // Save Tutorial in the database
+    //     CognitoRolesdb.create(note)
+    //         .then((data: never) => {
+    //             //res.send(JSON.stringify(data));
+    //             console.log("CREATED NEW Cognito Role: " + data)
+    //         })
+    //         .catch((err: { message: string; }) => {
+    //             console.log(err)
+    //         });
+    // }
+
     // Create and Save a new note
-    create (req:any, res:any) {
+    create(req: any, res: any) {
 
         // Validate request
         //^
 
 
         // Create a note
-        const note: CognitoRole = {
-            // username: req.body.username,
-            // someReal: req.body.someReal,
-            // signUpDate: req.body.signUpDate
-            cognito_user_group: req.body.cognito_user_group,
+        const note: Role = {
             role: req.body.role
         };
 
 
         // Save Tutorial in the database
-        CognitoRolesdb.create(note)
+        Rolesdb.create(note)
             .then((data: never) => {
                 //res.send(JSON.stringify(data));
-                console.log("CREATED NEW note: " + data)
+                console.log("CREATED NEW Cognito Role: " + data)
                 res.send(data);
             })
             .catch((err: { message: string; }) => {
@@ -79,15 +98,15 @@ class CognitoRolesdbController {
 
     // Retrieve all notes from the database.
     //We use req.query.title to get query string from the Request and consider it as condition for findAll() method.
-    findAll (req:any, res:any){
-        const ownedBy = req.query.ownedBy;
-        const condition = ownedBy ? {
-            username: {
-                [Op.iLike]: `%${ownedBy}%`
-            }
-        } : null;
+    findAll(req: any, res: any) {
+        // const ownedBy = req.query.ownedBy;
+        // const condition = ownedBy ? {
+        //     username: {
+        //         [Op.iLike]: `%${ownedBy}%`
+        //     }
+        // } : null;
 
-        CognitoRolesdb.findAll({ where: condition })
+        Rolesdb.findAll({where: null})
             .then((data: any) => {
                 console.log("data: " + data)
                 res.send(data);
@@ -98,12 +117,13 @@ class CognitoRolesdbController {
                 });
             });
     }
+
 //
 // // Find a single Tutorial with an id
-    findOne (req: any, res: any) {
+    findOne(req: any, res: any) {
         const id = req.params.id;
 
-        CognitoRolesdb.findByPk(id)
+        Rolesdb.findByPk(id)
             .then((data: any) => {
                 res.send(data);
             })
@@ -113,6 +133,7 @@ class CognitoRolesdbController {
                 });
             });
     };
+
 //
 // // Update a Tutorial by the id in the request
 // exports.update = (req, res) => {

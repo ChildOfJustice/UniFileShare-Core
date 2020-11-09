@@ -2,16 +2,15 @@ import * as express from 'express';
 import { Request, Response} from "express";
 import AuthMiddleWare from '../middleware/auth.middleware'
 
-import { FileMetadata } from '../interfaces/databaseTables'
+import {Cluster, Role} from '../interfaces/databaseTables'
 
 import db from "../models"
 
-const MetadataDB = db.metadataDB;
-const File_ClusterSubDB = db.file_clusterSubDB;
+const Clustersdb = db.clustersDB;
 const Op = db.SequelizeService.Op;
 
-class DatabaseController {
-    public path = '/files/metadata'
+class ClustersdbController {
+    public path = '/clusters'
     public router = express.Router()
     private authMiddleWare: AuthMiddleWare
 
@@ -23,40 +22,30 @@ class DatabaseController {
 
     private initRoutes(){
         this.router.use(this.authMiddleWare.verifyToken)
+
         // Create a new note
         this.router.post("/create", this.create);
 
         // Retrieve all Tutorials
         this.router.get("/findAll", this.findAll);
-
-        // Retrieve used storage size for the user
-        this.router.get("/calcUsedSize", this.calcUsedSize);
-
+        this.router.post("/findAll", this.findAllWithIds)
         // // Retrieve all published Tutorials
         // router.get("/published", tutorials.findAllPublished);
         //
         // // Retrieve a single Tutorial with id
-        // router.get("/:id", tutorials.findOne);
+        this.router.get("/", this.findOne);
         //
         // // Update a Tutorial with id
         // router.put("/:id", tutorials.update);
         //
-        // Delete a note with id
+        // // Delete a Tutorial with id
+        // router.delete("/:id", tutorials.delete);
         this.router.delete("/delete", this.delete);
-
-
-        this.router.get("/calcUsedSize", this.calcUsedSize);
         //
         // // Create a new Tutorial
         // router.delete("/", tutorials.deleteAll);
 
     }
-
-    home(req: Request, res: Response){
-        res.send("This is a db home page")
-    }
-
-
 
     // Create and Save a new note
     create (req:any, res:any) {
@@ -66,27 +55,17 @@ class DatabaseController {
 
 
         // Create a note
-        const note: FileMetadata = {
-            // username: req.body.username,
-            // someReal: req.body.someReal,
-            // signUpDate: req.body.signUpDate
-            id: null,
+        const note: Cluster = {
+            clusterId: null,
+            //createdDate: req.body.createdDate,
             name: req.body.name,
-            S3uniqueName: req.body.S3uniqueName,
-            cloud: req.body.cloud,
-            ownedBy: req.body.ownedBy,
-            uploadedBy: req.body.uploadedBy,
-            sizeOfFile_MB: req.body.sizeOfFile_MB,
-            tagsKeys: req.body.tagsKeys,
-            tagsValues: req.body.tagsValues,
+            ownerUserId: req.body.ownerUserId,
         };
 
 
-        // Save Tutorial in the database
-        MetadataDB.create(note)
+        Clustersdb.create(note)
             .then((data: never) => {
-                //res.send(JSON.stringify(data));
-                console.log("CREATED NEW note: " + data)
+                console.log("CREATED NEW CLUSTER: " + data)
                 res.send(data);
             })
             .catch((err: { message: string; }) => {
@@ -99,21 +78,16 @@ class DatabaseController {
     // Retrieve all notes from the database.
     //We use req.query.title to get query string from the Request and consider it as condition for findAll() method.
     findAll (req:any, res:any){
-
-        const clusterId = req.query.clusterId;
-        const condition = clusterId ? {
-            clusterId: clusterId
+        //https://stackoverflow.com/questions/61615632/sequelize-how-to-compare-equality-between-dates
+        //https://sequelize.org/v5/manual/querying.html
+        const ownerUserId = req.query.ownerUserId;
+        const condition = ownerUserId ? {
+            ownerUserId: {
+                [Op.like]: '%' + ownerUserId + '%'
+            }
         } : null;
 
-
-        MetadataDB.findAll({
-            attributes: ['id', 'name', 'cloud', 'uploadedBy', 'ownedBy', 'sizeOfFile_MB', 'tagsKeys', 'tagsValues'],
-            include: [{
-                model: db.file_clusterSubDB,
-                where: condition,
-                attributes: []
-                }]
-            })
+        Clustersdb.findAll({ where: condition })
             .then((data: any) => {
                 console.log("data: " + data)
                 res.send(data);
@@ -125,50 +99,44 @@ class DatabaseController {
             });
     }
 
-    calcUsedSize(req:any, res:any){
+    findAllWithIds (req:any, res:any){
+        console.log(JSON.stringify(req.body.clusterIds))
+        Clustersdb.findAll({ where: {
+                clusterId: {
+                    [Op.in]: req.body.clusterIds,
+                }
+            } })
+            .then((data: any) => {
+                console.log("data: " + data)
+                res.send(data);
+            })
+            .catch((err: { message: string; }) => {
+                res.status(500).send({
+                    message: err.message || "Some error occurred while retrieving tutorials."
+                });
+            });
+    }
+//
+// // Find a single cluster with an id
+    findOne (req: any, res: any) {
+        const id = req.query.clusterId;
 
-        const ownerUserId = req.query.ownerUserId;
-        const condition = ownerUserId ? {
-            ownerUserId: ownerUserId
+        const condition = id ? {
+            clusterId: id
         } : null;
 
-        //TODO get db names from configuration and rewrite it in Sequelize syntax
-        MetadataDB.findAll({
-            attributes: [[db.sequelizeEntity.fn('sum', db.sequelizeEntity.col('sizeOfFile_MB')), 'usedStorageSize']],
-
-            where: {
-                id: {
-                    [Op.in]: [db.sequelizeEntity.literal(`SELECT "fileId" FROM "file-clusterSubDBs" WHERE "clusterId" IN
-(SELECT "clusterId" FROM "clustersDBs" WHERE "ownerUserId" = '`+ ownerUserId + `')`)]
-                }
-            }
-        })
-        .then((data: any) => {
-            console.log("data: " + data)
-            res.send(data);
-        })
-        .catch((err: { message: string; }) => {
-            res.status(500).send({
-                message: err.message || "Some error occurred while retrieving tutorials."
+        Clustersdb.findAll({ where: condition })
+            .then((data: any) => {
+                console.log("data: " + data)
+                res.send(data);
+            })
+            .catch((err: { message: string; }) => {
+                res.status(500).send({
+                    message: err.message || "Some error occurred while retrieving tutorials."
+                });
             });
-        });
-    }
-
-//
-// // Find a single Tutorial with an id
-// exports.findOne = (req, res) => {
-//     const id = req.params.id;
-//
-//     Tutorial.findByPk(id)
-//         .then(data => {
-//             res.send(data);
-//         })
-//         .catch(err => {
-//             res.status(500).send({
-//                 message: "Error retrieving Tutorial with id=" + id
-//             });
-//         });
-// };
+        console.log("REQUEST HANDLED")
+    };
 //
 // // Update a Tutorial by the id in the request
 // exports.update = (req, res) => {
@@ -197,17 +165,17 @@ class DatabaseController {
 //
 // // Delete a Tutorial with the specified id in the request
     delete(req: any, res: any) {
-        MetadataDB.destroy({
-            where: { id: req.query.id}
+        Clustersdb.destroy({
+            where: { clusterId: req.query.clusterId}
         })
             .then((num: number) => {
                 if (num == 1) {
                     res.send({
-                        message: "file metadata was deleted successfully!"
+                        message: `cluster ${req.query.clusterId} was deleted successfully!`
                     });
                 } else {
                     res.send({
-                        message: `Cannot delete file metadata. Maybe it was not found!`
+                        message: `Cannot delete cluster ${req.query.clusterId}. Maybe it was not found!`
                     });
                 }
             })
@@ -217,6 +185,7 @@ class DatabaseController {
                 });
             });
     };
+//
 //
 // // Delete all Tutorials from the database.
 // exports.deleteAll = (req, res) => {
@@ -248,4 +217,4 @@ class DatabaseController {
 // };
 }
 
-export default DatabaseController;
+export default ClustersdbController;

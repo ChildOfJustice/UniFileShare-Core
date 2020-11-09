@@ -3,6 +3,11 @@ import { Request, Response } from 'express';
 import {body, ValidationChain, validationResult} from "express-validator";
 
 import CognitoService from '../services/cognito.service';
+import {User} from "../interfaces/user";
+
+import config from "../../util/config"
+import {CognitoIdentityServiceProvider} from "aws-sdk";
+import * as AWS from "aws-sdk";
 
 class AuthController {
     public path = '/auth'
@@ -19,11 +24,13 @@ class AuthController {
     }
 
 
+
+
     signUp(req: Request, res: Response){
 
         const result = validationResult(req);
-        console.log("SIGN UP REQUEST: ");
-        console.log(req.body);
+        //console.log("SIGN UP REQUEST: ");
+        //console.log(req.body);
         if(!result.isEmpty()){
             return res.status(422).json({errors: result.array()})
         }
@@ -38,12 +45,31 @@ class AuthController {
 
         const cognito = new CognitoService();
 
+        const cognitoIdentityServiceProvider = cognito.cognitoIdentity;
+
         cognito.signUpUser(username, password, userAttr)
             .then(promiseOutput =>{
                 if(promiseOutput.success){
+
+                    //TODO get credentials from IdentityPool and call cognito.confirmUser()
+                    AWS.config.update({
+                        region: config.AWS.region,
+                        credentials: new AWS.CognitoIdentityCredentials({
+                            IdentityPoolId: config.AWS.IdentityPool.IdentityPoolId,
+                            // Logins: { // optional tokens, used for authenticated login
+                            //         //     'graph.facebook.com': 'FBTOKEN',
+                            //         //     'www.amazon.com': 'AMAZONTOKEN',
+                            //         //     'accounts.google.com': 'GOOGLETOKEN',
+                            //         //     'appleid.apple.com': 'APPLETOKEN'
+                            //         // }
+                        })
+                    });
+
+
+
                     res.status(200).json({"data": promiseOutput.msg}).end()
                 } else {
-                    res.status(500).json({"Internal server error": promiseOutput.msg}).end()
+                    res.status(500).send({message: promiseOutput.msg})
                 }
             });
     }
@@ -51,8 +77,8 @@ class AuthController {
 
     signIn(req: Request, res: Response){
         const result = validationResult(req);
-        console.log("SIGN IN REQUEST: ");
-        console.log(req.body);
+        //console.log("SIGN IN REQUEST: ");
+        //console.log(req.body);
 
         if(!result.isEmpty()){
             return res.status(422).json({errors: result.array()})
@@ -60,16 +86,19 @@ class AuthController {
 
         console.log("Validation successful!")
 
+
         const { username, password } = req.body;
         const cognito = new CognitoService();
         cognito.signInUser(username, password)
+            .catch()
             .then(promiseOutput =>{
                 if(promiseOutput.success){
                     res.status(200).json({"data": promiseOutput.msg}).end()
                 } else {
-                    res.status(500).json({"Internal server error": promiseOutput.msg}).end()
+                    res.status(500).send({message: promiseOutput.msg})
                 }
             });
+
 
     }
     verify(req: Request, res: Response){

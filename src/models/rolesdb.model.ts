@@ -1,9 +1,12 @@
 export default function (sequelize:any, Sequelize:any) {
-    return sequelize.define("cognitoRolesDB", {
+    return sequelize.define("rolesDB", {
         //Sequelize types: https://sequelize.org/v5/manual/data-types.html
-        cognitoUserGroup: {
-            type: Sequelize.STRING(200)
-        },
+
+        // roleId: {
+        //     type: Sequelize.INTEGER,
+        //     unique: true,
+        //     primaryKey: true,
+        // },
         role: {
             type: Sequelize.STRING(50)
         }

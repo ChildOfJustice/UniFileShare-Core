@@ -1,17 +1,15 @@
 import * as express from 'express';
-import { Request, Response} from "express";
 import AuthMiddleWare from '../middleware/auth.middleware'
 
-import { FileMetadata } from '../interfaces/databaseTables'
+import {Role, File_ClusterSub} from '../interfaces/databaseTables'
 
 import db from "../models"
 
-const MetadataDB = db.metadataDB;
-const File_ClusterSubDB = db.file_clusterSubDB;
+const File_Clusterdb = db.file_clusterSubDB;
 const Op = db.SequelizeService.Op;
 
-class DatabaseController {
-    public path = '/files/metadata'
+class File_ClusterdbController {
+    public path = '/file_cluster'
     public router = express.Router()
     private authMiddleWare: AuthMiddleWare
 
@@ -23,67 +21,43 @@ class DatabaseController {
 
     private initRoutes(){
         this.router.use(this.authMiddleWare.verifyToken)
+
         // Create a new note
         this.router.post("/create", this.create);
 
         // Retrieve all Tutorials
         this.router.get("/findAll", this.findAll);
 
-        // Retrieve used storage size for the user
-        this.router.get("/calcUsedSize", this.calcUsedSize);
-
         // // Retrieve all published Tutorials
         // router.get("/published", tutorials.findAllPublished);
         //
         // // Retrieve a single Tutorial with id
-        // router.get("/:id", tutorials.findOne);
+        this.router.get("/:id", this.findOne);
         //
         // // Update a Tutorial with id
         // router.put("/:id", tutorials.update);
         //
         // Delete a note with id
         this.router.delete("/delete", this.delete);
-
-
-        this.router.get("/calcUsedSize", this.calcUsedSize);
         //
         // // Create a new Tutorial
         // router.delete("/", tutorials.deleteAll);
 
     }
 
-    home(req: Request, res: Response){
-        res.send("This is a db home page")
-    }
-
-
-
     // Create and Save a new note
     create (req:any, res:any) {
-
-        // Validate request
-        //^
-
+        console.log("SUB CREATED")
 
         // Create a note
-        const note: FileMetadata = {
-            // username: req.body.username,
-            // someReal: req.body.someReal,
-            // signUpDate: req.body.signUpDate
-            id: null,
-            name: req.body.name,
-            S3uniqueName: req.body.S3uniqueName,
-            cloud: req.body.cloud,
-            ownedBy: req.body.ownedBy,
-            uploadedBy: req.body.uploadedBy,
-            sizeOfFile_MB: req.body.sizeOfFile_MB,
-            tagsKeys: req.body.tagsKeys,
-            tagsValues: req.body.tagsValues,
+        const note: File_ClusterSub = {
+            fileId: req.body.fileId,
+            clusterId: req.body.clusterId
         };
 
 
         // Save Tutorial in the database
-        MetadataDB.create(note)
+        File_Clusterdb.create(note)
             .then((data: never) => {
                 //res.send(JSON.stringify(data));
                 console.log("CREATED NEW note: " + data)
@@ -99,21 +73,12 @@ class DatabaseController {
     // Retrieve all notes from the database.
     //We use req.query.title to get query string from the Request and consider it as condition for findAll() method.
     findAll (req:any, res:any){
-
         const clusterId = req.query.clusterId;
         const condition = clusterId ? {
             clusterId: clusterId
         } : null;
 
-
-        MetadataDB.findAll({
-            attributes: ['id', 'name', 'cloud', 'uploadedBy', 'ownedBy', 'sizeOfFile_MB', 'tagsKeys', 'tagsValues'],
-            include: [{
-                model: db.file_clusterSubDB,
-                where: condition,
-                attributes: []
-                }]
-            })
+        File_Clusterdb.findAll({ where: condition })
             .then((data: any) => {
                 console.log("data: " + data)
                 res.send(data);
@@ -124,51 +89,21 @@ class DatabaseController {
                 });
             });
     }
-
-    calcUsedSize(req:any, res:any){
-
-        const ownerUserId = req.query.ownerUserId;
-        const condition = ownerUserId ? {
-            ownerUserId: ownerUserId
-        } : null;
-
-        //TODO get db names from configuration and rewrite it in Sequelize syntax
-        MetadataDB.findAll({
-            attributes: [[db.sequelizeEntity.fn('sum', db.sequelizeEntity.col('sizeOfFile_MB')), 'usedStorageSize']],
-
-            where: {
-                id: {
-                    [Op.in]: [db.sequelizeEntity.literal(`SELECT "fileId" FROM "file-clusterSubDBs" WHERE "clusterId" IN
-(SELECT "clusterId" FROM "clustersDBs" WHERE "ownerUserId" = '`+ ownerUserId + `')`)]
-                }
-            }
-        })
-        .then((data: any) => {
-            console.log("data: " + data)
-            res.send(data);
-        })
-        .catch((err: { message: string; }) => {
-            res.status(500).send({
-                message: err.message || "Some error occurred while retrieving tutorials."
-            });
-        });
-    }
-
 //
 // // Find a single Tutorial with an id
-// exports.findOne = (req, res) => {
-//     const id = req.params.id;
-//
-//     Tutorial.findByPk(id)
-//         .then(data => {
-//             res.send(data);
-//         })
-//         .catch(err => {
-//             res.status(500).send({
-//                 message: "Error retrieving Tutorial with id=" + id
-//             });
-//         });
-// };
+    findOne (req: any, res: any) {
+        const id = req.params.id;
+
+        File_Clusterdb.findByPk(id)
+            .then((data: any) => {
+                res.send(data);
+            })
+            .catch((err: any) => {
+                res.status(500).send({
+                    message: "Error retrieving Tutorial with id=" + id + ": " + err
+                });
+            });
+    };
 //
 // // Update a Tutorial by the id in the request
 // exports.update = (req, res) => {
@@ -195,19 +130,21 @@ class DatabaseController {
 //         });
 // };
 //
-// // Delete a Tutorial with the specified id in the request
+// Delete a Tutorial with the specified id in the request
     delete(req: any, res: any) {
-        MetadataDB.destroy({
-            where: { id: req.query.id}
+
+        File_Clusterdb.destroy({
+            where: { fileId: req.query.fileId,
+                clusterId: req.query.clusterId }
         })
             .then((num: number) => {
                 if (num == 1) {
                     res.send({
-                        message: "file metadata was deleted successfully!"
+                        message: "Tutorial was deleted successfully!"
                     });
                 } else {
                     res.send({
-                        message: `Cannot delete file metadata. Maybe it was not found!`
+                        message: `Cannot delete file in sub table with id=${req.query.fileId}. for cluster ${req.query.clusterId}. Maybe it was not found!`
                     });
                 }
             })
@@ -248,4 +185,4 @@ class DatabaseController {
 // };
 }
 
-export default DatabaseController;
+export default File_ClusterdbController;

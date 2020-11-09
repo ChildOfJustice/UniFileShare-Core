@@ -1,4 +1,4 @@
-export default function MetadataDB(sequelize:any, Sequelize:any) {
+export default function filesMetadataDB(sequelize:any, Sequelize:any) {
     return sequelize.define("filesMetadataDB", {
         //Sequelize types: https://sequelize.org/v5/manual/data-types.html
         // signUpDate: {
