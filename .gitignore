@@ -371,3 +371,5 @@ dist
 !/src/public/mstile-150x150.png
 
 /util/config.ts
+/util/prebuildScripts/publish.sh
+/util/prebuildScripts/unpublish.sh

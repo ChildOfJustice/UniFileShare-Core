@@ -47,7 +47,7 @@ class File_ClusterdbController {
 
     // Create and Save a new note
     create (req:any, res:any) {
-        console.log("SUB CREATED")
+        console.log("SUB CREATING:")
 
         // Create a note
         const note: File_ClusterSub = {
