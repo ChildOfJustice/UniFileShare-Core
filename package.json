@@ -14,6 +14,8 @@
   "scripts": {
     "test": "jest",
     "build-test": "npm run build && npm run start-dev",
+    "publish_db": "./util/prebuildScripts/publish.sh",
+    "unpublish_db": "./util/prebuildScripts/unpublish.sh",
     "start-dev": "nodemon --config \"./util/nodemon.json\"/",
     "build": "rm -rf ./build/* && tsc --build tsconfig.json && webpack --config src/webpack.config.js",
     "start": "node build/src/index.js",
