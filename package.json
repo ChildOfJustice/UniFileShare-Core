@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "test": "jest",
-    "build-test": "npm run build && npm run start-dev",
+    "build-test": "npm run build && npm run unpublish_db && npm run start-dev",
     "publish_db": "./util/prebuildScripts/publish.sh",
     "unpublish_db": "./util/prebuildScripts/unpublish.sh",
     "start-dev": "nodemon --config \"./util/nodemon.json\"/",

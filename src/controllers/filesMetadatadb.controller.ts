@@ -114,7 +114,7 @@ class DatabaseController {
 
 
         MetadataDB.findAll({
-            attributes: ['id', 'name', 'cloud', 'uploadedBy', 'ownedBy', 'sizeOfFile_MB', 'tagsKeys', 'tagsValues'],
+            attributes: ['id', 'name', 'S3uniqueName', 'cloud', 'uploadedBy', 'ownedBy', 'sizeOfFile_MB', 'tagsKeys', 'tagsValues'],
             include: [{
                 model: db.file_clusterSubDB,
                 where: condition,

@@ -1,0 +1,40 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Resources": {
+        "TestAppClient": {
+            "Type": "AWS::Cognito::UserPoolClient",
+            "Properties": {
+                "ClientName": "TestApp",
+                "GenerateSecret": true,
+                "ExplicitAuthFlows": [
+                    "ALLOW_USER_PASSWORD_AUTH",
+                    "ALLOW_CUSTOM_AUTH",
+                    "ALLOW_USER_SRP_AUTH",
+                    "ALLOW_REFRESH_TOKEN_AUTH"
+                ],
+                "UserPoolId": { "Ref" : "TestUserPool" }
+            },
+            "DependsOn" : "TestUserPool"
+        },
+        
+        "TestUserPool": {
+            "Type": "AWS::Cognito::UserPool",
+            "Properties": {
+                "UserPoolName": "TestPool",
+                
+                "MfaConfiguration": "OFF",
+            
+                "Policies":{
+                    "PasswordPolicy": {
+                        "MinimumLength": 6,
+                        "RequireLowercase": false,
+                        "RequireNumbers": false,
+                        "RequireSymbols": false,
+                        "RequireUppercase": false
+                    }
+                }
+                
+            }
+        }
+    }
+}

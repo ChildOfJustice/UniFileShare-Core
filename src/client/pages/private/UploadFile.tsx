@@ -170,7 +170,7 @@ class UploadFile extends React.Component<ReduxType, IState> {
         if(itemValue == "AWS"){
 
 
-            AWS.config.region = "eu-central-1"; // Region
+            AWS.config.region = config.AWS.region; // Region
             AWS.config.credentials = new AWS.CognitoIdentityCredentials({
                 IdentityPoolId: config.AWS.IdentityPool.IdentityPoolId,
             });
@@ -259,7 +259,7 @@ class UploadFile extends React.Component<ReduxType, IState> {
                     // makeFetch<any>(fetchParams).then(jsonRes => {
                     //     console.log(jsonRes)
                     // }).catch(error => alert("ERROR: " + error))
-                    alert("File uploaded")
+                    //alert("File uploaded")
                 }).catch(error => alert("ERROR: " + error))
 
 
@@ -267,11 +267,11 @@ class UploadFile extends React.Component<ReduxType, IState> {
             )
 
             //TODO turn upload on
-            return;
+            //return;
 
             const params = {
                 Bucket: config.AWS.S3.bucketName,
-                Key: file.name,
+                Key: metadata.S3uniqueName,
                 Body: file,
             };
 
