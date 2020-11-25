@@ -1,6 +1,7 @@
 CREATE TABLE filesMetadataLogs (
+    id serial,
     operation         char(1)   NOT NULL,
-    userid            text      NOT NULL,
+    databaseuserid            text      NOT NULL,
     fileId          integer      NOT NULL,
     stamp             timestamp NOT NULL
 );
@@ -35,20 +36,20 @@ CREATE OR REPLACE FUNCTION update_files_metadata_view() RETURNS TRIGGER AS $$
             IF NOT FOUND THEN RETURN NULL; END IF;
 
             OLD.last_updated = now();
-            INSERT INTO filesMetadataLogs VALUES('D', user, OLD.id, OLD.last_updated);
+            INSERT INTO filesMetadataLogs (operation, databaseuserid, fileId, stamp) VALUES('D', user, OLD.id, OLD.last_updated);
             RETURN OLD;
         ELSIF (TG_OP = 'UPDATE') THEN
             UPDATE "filesMetadataDBs" SET name = NEW.name, "S3uniqueName" = NEW."S3uniqueName", cloud = NEW.cloud, "uploadedBy" = NEW."uploadedBy", "ownedBy" = NEW."ownedBy", "sizeOfFile_MB" = NEW."sizeOfFile_MB", "tagsKeys" = NEW."tagsKeys", "tagsValues" = NEW."tagsValues", "updatedAt" = now() WHERE id = OLD.id;
             IF NOT FOUND THEN RETURN NULL; END IF;
 
             NEW.last_updated = now();
-            INSERT INTO filesMetadataLogs VALUES('U', user, NEW.id, NEW.last_updated);
+            INSERT INTO filesMetadataLogs (operation, databaseuserid, fileId, stamp) VALUES('U', user, NEW.id, NEW.last_updated);
             RETURN NEW;
         ELSIF (TG_OP = 'INSERT') THEN
             INSERT INTO "filesMetadataDBs" (name, "S3uniqueName", cloud, "uploadedBy", "ownedBy", "sizeOfFile_MB", "tagsKeys", "tagsValues", "createdAt", "updatedAt") VALUES(New.name, New."S3uniqueName", New."cloud", New."uploadedBy", New."ownedBy", New."sizeOfFile_MB", New."tagsKeys", New."tagsValues", now(), now()) RETURNING id INTO v_new_id;
             NEW.id = v_new_id;
             NEW.last_updated = now();
-            INSERT INTO filesMetadataLogs (operation, userid, fileId, stamp) VALUES('I', user, NEW.id, NEW.last_updated);
+            INSERT INTO filesMetadataLogs (operation, databaseuserid, fileId, stamp) VALUES('I', user, NEW.id, NEW.last_updated);
             RETURN NEW;
         END IF;
     END
