@@ -18,7 +18,7 @@ Run these scripts from `package.json`:
 * open terminal in root dir and run `echo 'export PATH="/home/sardor/.ebcli-virtual-env/executables:$PATH"' >> ~/.bash_profile && source ~/.bash_profile`.
 * run `eb init`.
 * run `eb create --single`.
-* add to default security group new inboud rule, which accepts all traffic from elasticBeanstalk's security group. (The one, that was created with Elastic Beanstalk environment, after previous command).
+* `add to default security group a new inboud rule for PostgreSQL` OR add to default security group new inboud rule, which accepts all traffic from elasticBeanstalk's security group. (The one, that was created with Elastic Beanstalk environment, after previous command).
 * run `publish_db` to add manually integrated parts of database.
 
 Other scripts:
