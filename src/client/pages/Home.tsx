@@ -12,7 +12,7 @@ export default () => {
                 This is Universal File Share System.
             </p>
             <p>
-                Feel free to test your service! ;p
+                Feel free to test our service! ;p
             </p>
             <p>
                 <LinkContainer to="/signIn">

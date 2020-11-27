@@ -67,7 +67,6 @@ class UploadFile extends React.Component<ReduxType, IState> {
 
 
         const {authToken, idToken, loading} = this.props;
-//TODO OWNER OF THE CLUSTER!!!
 
 
         let clusterOwnerUserId = ""
@@ -170,12 +169,18 @@ class UploadFile extends React.Component<ReduxType, IState> {
 
         if(itemValue == "AWS"){
 
-            AWS.config.update({
-                region: config.AWS.S3.bucketRegion,
-                credentials: new AWS.CognitoIdentityCredentials({
-                    IdentityPoolId: config.AWS.IdentityPool.IdentityPoolId
-                })
+
+            AWS.config.region = config.AWS.region; // Region
+            AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+                IdentityPoolId: config.AWS.IdentityPool.IdentityPoolId,
             });
+
+            // AWS.config.update({
+            //     region: config.AWS.S3.bucketRegion,
+            //     credentials: new AWS.CognitoIdentityCredentials({
+            //         IdentityPoolId: config.AWS.IdentityPool.IdentityPoolId
+            //     })
+            // });
 
             var s3 = new AWS.S3({
                 apiVersion: '2006-03-01',
@@ -193,7 +198,7 @@ class UploadFile extends React.Component<ReduxType, IState> {
 
 
             //SEND Metadata TO DB
-            const metadata: FileMetadata = {
+            const metadata = {
                 id: null,
                 name: file.name,
                 // @ts-ignore
@@ -204,6 +209,8 @@ class UploadFile extends React.Component<ReduxType, IState> {
                 sizeOfFile_MB: file.size / 1024 / 1024,
                 tagsKeys: userTagsKeys,
                 tagsValues: userTagsValues,
+                // @ts-ignore
+                clusterId: this.props.match.params.clusterId
             };
 
             this.checkStorageSizeLimitation(metadata.sizeOfFile_MB).then( () => {
@@ -227,32 +234,32 @@ class UploadFile extends React.Component<ReduxType, IState> {
                 }
 
                 makeFetch<any>(fetchParams).then(fileInfo => {
-                    console.log(fileInfo)
-                    //Bound file to cluster in SUB table
-
-                    const file_cluster: File_ClusterSub = {
-                        fileId: fileInfo.id,
-                        // @ts-ignore
-                        clusterId: this.props.match.params.clusterId
-                    };
-
-
-                    const {authToken, idToken, loading} = this.props;
-
-                    const fetchParams: FetchParams = {
-                        url: '/file_cluster/create',
-                        authToken: authToken,
-                        idToken: idToken,
-                        method: 'POST',
-                        body: file_cluster,
-
-                        actionDescription: "create file-cluster sub"
-                    }
-
-                    makeFetch<any>(fetchParams).then(jsonRes => {
-                        console.log(jsonRes)
-                    }).catch(error => alert("ERROR: " + error))
-
+                    // console.log(fileInfo)
+                    // //Bound file to cluster in SUB table
+                    //
+                    // const file_cluster: File_ClusterSub = {
+                    //     fileId: fileInfo.id,
+                    //     // @ts-ignore
+                    //     clusterId: this.props.match.params.clusterId
+                    // };
+                    //
+                    //
+                    // const {authToken, idToken, loading} = this.props;
+                    //
+                    // const fetchParams: FetchParams = {
+                    //     url: '/file_cluster/create',
+                    //     authToken: authToken,
+                    //     idToken: idToken,
+                    //     method: 'POST',
+                    //     body: file_cluster,
+                    //
+                    //     actionDescription: "create file-cluster sub"
+                    // }
+                    //
+                    // makeFetch<any>(fetchParams).then(jsonRes => {
+                    //     console.log(jsonRes)
+                    // }).catch(error => alert("ERROR: " + error))
+                    //alert("File uploaded")
                 }).catch(error => alert("ERROR: " + error))
 
 
@@ -260,11 +267,11 @@ class UploadFile extends React.Component<ReduxType, IState> {
             )
 
             //TODO turn upload on
-            return;
+            //return;
 
             const params = {
                 Bucket: config.AWS.S3.bucketName,
-                Key: file.name,
+                Key: metadata.S3uniqueName,
                 Body: file,
             };
 

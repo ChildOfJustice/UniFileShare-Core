@@ -85,6 +85,8 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
     }
 
     deleteFile = (S3uniqueName:string, fileId: number | null) => {
+        console.log("Trying to delete file: " + S3uniqueName)
+
         if(this.state.permissions[2] != '1') {
             alert("You don't have permissions to delete any files!")
             return
@@ -155,19 +157,24 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
         }).catch(error => alert("ERROR: " + error))
     }
 
-    downloadFile = (fileName:string, cloud:string) => {
+    downloadFile = (fileKey:string, cloud:string, fileName:string) => {
+        console.log("Trying to download file: " + fileName)
         if(this.state.permissions[0] != '1') {
             alert("You don't have permissions to download any files.")
             return
         }
         if (cloud == 'AWS'){
 
-            AWS.config.update({
-                region: config.AWS.S3.bucketRegion,
-                credentials: new AWS.CognitoIdentityCredentials({
-                    IdentityPoolId: config.AWS.IdentityPool.IdentityPoolId
-                })
+            AWS.config.region = config.AWS.region; // Region
+            AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+                IdentityPoolId: config.AWS.IdentityPool.IdentityPoolId,
             });
+            // AWS.config.update({
+            //     region: config.AWS.S3.bucketRegion,
+            //     credentials: new AWS.CognitoIdentityCredentials({
+            //         IdentityPoolId: config.AWS.IdentityPool.IdentityPoolId
+            //     })
+            // });
 
             var s3 = new AWS.S3({
                 apiVersion: '2006-03-01',
@@ -176,11 +183,12 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
 
             var promise = s3.getSignedUrlPromise('getObject', {
                 Bucket: config.AWS.S3.bucketName,
-                Key: fileName
+                Key: fileKey,
+                ResponseContentDisposition: 'attachment; filename ="' + fileName + '"'
             });
             promise.then(function(url) {
-                window.open( url, '_blank' );
-            }, function(err) { alert("error") });
+                window.open( url, '_blank' );// + '?response-content-disposition=attachment;filename='+fileName
+            }, function(err) { alert("Error with downloading your file: " + err) });
 
 
         }
@@ -517,7 +525,7 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
                                     <td key={counter}>
                                         {counter++}
                                     </td>
-                                    <td key={fileMetadata.S3uniqueName} onClick={() => this.downloadFile(fileMetadata.S3uniqueName, fileMetadata.cloud)}>
+                                    <td onClick={() => this.downloadFile(fileMetadata.S3uniqueName, fileMetadata.cloud, fileMetadata.name)}>
                                         {fileMetadata.name}
                                     </td>
                                     <td>
