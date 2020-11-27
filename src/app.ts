@@ -60,11 +60,11 @@ class App {
         try {
             await db.sequelizeEntity.authenticate();
             console.log('Connection has been established successfully.');
-            //db.sequelizeEntity.sync();
+            db.sequelizeEntity.sync();
             //for development:
-            db.sequelizeEntity.sync({force: true}).then(() => {
-                console.log("Drop and re-sync db.");
-            });
+            // db.sequelizeEntity.sync({force: true}).then(() => {
+            //     console.log("Drop and re-sync db.");
+            // });
             //^
 
         } catch (error) {

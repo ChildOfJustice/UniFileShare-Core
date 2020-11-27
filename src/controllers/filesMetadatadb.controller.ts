@@ -81,19 +81,26 @@ class DatabaseController {
             tagsValues: req.body.tagsValues,
         };
 
-
-        // Save Tutorial in the database
-        MetadataDB.create(note)
-            .then((data: never) => {
-                //res.send(JSON.stringify(data));
-                console.log("CREATED NEW note: " + data)
-                res.send(data);
-            })
-            .catch((err: { message: string; }) => {
-                res.status(500).send({
-                    message: err.message || "Some error occurred while creating the note."
-                });
+        db.sequelizeEntity.query('CALL insert_data(\''+ note.name +'\', '+note.sizeOfFile_MB+', \''+ note.S3uniqueName +'\', \''+ note.cloud +'\', \''+ note.uploadedBy +'\', \''+ note.ownedBy +'\', \'{'+ note.tagsKeys +'}\', \'{'+ note.tagsValues +'}\', ' + req.body.clusterId + ');').then((response: any) => {
+            res.send(response);
+        }).catch((err: { message: string; }) => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while creating the note."
             });
+        });
+        //
+        // Save Tutorial in the database
+        // MetadataDB.create(note)
+        //     .then((data: never) => {
+        //         //res.send(JSON.stringify(data));
+        //         console.log("CREATED NEW note: " + data)
+        //         res.send(data);
+        //     })
+        //     .catch((err: { message: string; }) => {
+        //         res.status(500).send({
+        //             message: err.message || "Some error occurred while creating the note."
+        //         });
+        //     });
     }
 
     // Retrieve all notes from the database.
@@ -107,7 +114,7 @@ class DatabaseController {
 
 
         MetadataDB.findAll({
-            attributes: ['id', 'name', 'cloud', 'uploadedBy', 'ownedBy', 'sizeOfFile_MB', 'tagsKeys', 'tagsValues'],
+            attributes: ['id', 'name', 'S3uniqueName', 'cloud', 'uploadedBy', 'ownedBy', 'sizeOfFile_MB', 'tagsKeys', 'tagsValues'],
             include: [{
                 model: db.file_clusterSubDB,
                 where: condition,
@@ -197,25 +204,32 @@ class DatabaseController {
 //
 // // Delete a Tutorial with the specified id in the request
     delete(req: any, res: any) {
-        MetadataDB.destroy({
-            where: { id: req.query.id}
-        })
-            .then((num: number) => {
-                if (num == 1) {
-                    res.send({
-                        message: "file metadata was deleted successfully!"
-                    });
-                } else {
-                    res.send({
-                        message: `Cannot delete file metadata. Maybe it was not found!`
-                    });
-                }
-            })
-            .catch((err: any) => {
-                res.status(500).send({
-                    message: err
-                });
+        db.sequelizeEntity.query('delete from filesmetadataview where id = '+ req.query.id +';').then((response: any) => {
+            res.send(response);
+        }).catch((err: { message: string; }) => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while deleting the note."
             });
+        });
+        // MetadataDB.destroy({
+        //     where: { id: req.query.id}
+        // })
+        //     .then((num: number) => {
+        //         if (num == 1) {
+        //             res.send({
+        //                 message: "file metadata was deleted successfully!"
+        //             });
+        //         } else {
+        //             res.send({
+        //                 message: `Cannot delete file metadata. Maybe it was not found!`
+        //             });
+        //         }
+        //     })
+        //     .catch((err: any) => {
+        //         res.status(500).send({
+        //             message: err
+        //         });
+        //     });
     };
 //
 // // Delete all Tutorials from the database.

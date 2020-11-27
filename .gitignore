@@ -371,3 +371,10 @@ dist
 !/src/public/mstile-150x150.png
 
 /util/config.ts
+/util/SqlScripts/publish.sh
+/util/SqlScripts/unpublish.sh
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml

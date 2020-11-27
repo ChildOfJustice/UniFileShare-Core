@@ -1,0 +1,135 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  TestAppClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: TestApp
+      GenerateSecret: true
+      ExplicitAuthFlows:
+      - ALLOW_USER_PASSWORD_AUTH
+      - ALLOW_CUSTOM_AUTH
+      - ALLOW_USER_SRP_AUTH
+      - ALLOW_REFRESH_TOKEN_AUTH
+      UserPoolId:
+        Ref: TestUserPool
+    DependsOn: TestUserPool
+  TestUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: TestPool
+      MfaConfiguration: 'OFF'
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 6
+          RequireLowercase: false
+          RequireNumbers: false
+          RequireSymbols: false
+          RequireUppercase: false
+  TestIdentityPool:
+    Type: AWS::Cognito::IdentityPool
+    Properties: 
+      AllowClassicFlow: false
+      AllowUnauthenticatedIdentities: true
+      # CognitoIdentityProviders: 
+      #   - CognitoIdentityProvider
+      IdentityPoolName: TestIdentityPool
+
+
+  
+  StorageBucket:
+    Type: AWS::S3::Bucket
+    Properties: 
+      BucketName: sardor-test-app
+      CorsConfiguration: 
+        CorsRules:
+          -
+            AllowedOrigins: 
+              - "*"
+            AllowedMethods: 
+              - POST
+              - GET
+              - PUT
+              - DELETE
+              - HEAD
+            AllowedHeaders: 
+              - "*"
+  UnauthRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Federated: 'cognito-identity.amazonaws.com'
+            Action: 'sts:AssumeRoleWithWebIdentity'
+            Condition:
+              StringEquals:
+                cognito-identity.amazonaws.com:aud: 
+                  Ref: TestIdentityPool
+              ForAnyValue:StringLike:
+                cognito-identity.amazonaws.com:amr: 'unauthenticated'
+      Path: /
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                    - s3:DeleteObjectTagging
+                    - s3:PutObject
+                    - s3:DeleteObject
+                    - s3:GetObject
+                    - s3:ReplicateTags
+                    - s3:PutObjectVersionTagging
+                    - s3:PutObjectTagging
+                Resource: !Sub
+                  - ${bucketArn}/*
+                  - { bucketArn: !GetAtt StorageBucket.Arn }
+    DependsOn: 
+      - StorageBucket
+      - TestIdentityPool
+  AuthRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - s3.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                    - s3:DeleteObjectTagging
+                    - s3:PutObject
+                    - s3:GetObject
+                    - s3:ReplicateTags
+                    - s3:PutObjectVersionTagging
+                    - s3:PutObjectTagging
+                Resource: 'arn:aws:s3:::sardor-test-app/*'
+    DependsOn: StorageBucket
+
+  RolesAttachement:
+    Type: AWS::Cognito::IdentityPoolRoleAttachment
+    Properties: 
+      IdentityPoolId: 
+        Ref: TestIdentityPool
+      Roles: {
+        "authenticated": {"Fn::GetAtt": [ "AuthRole", "Arn" ]},
+        "unauthenticated": {"Fn::GetAtt": [ "UnauthRole", "Arn" ]}
+      }
+    DependsOn: 
+      - AuthRole
+      - UnauthRole
+      - TestIdentityPool
