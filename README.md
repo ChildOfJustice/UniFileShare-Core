@@ -1,17 +1,28 @@
 # main-app
-## How to install?
+## How to install:
 1. Clone this repository.
 2. Install all dependencies.
 ```bash
-$ yarn add
-# or
 $ npm install
 ``` 
 
-## How to use?
-There are some created scripts in `package.json`:
+## How to start:
+Run these scripts from `package.json`:
+* run `cloudformation-deploy` - initialize all cloud infrastructure.
+* `wait!` until CloudFormation stack will be ready.
+* run `generate-config-file` - create connection file with all secret information (ids, passwords and etc).
+* update scripts in ./util/SqlScripts with a new database endpoint.
+* run `build` - build whole project and save it to `build` directory.
+* run `package` - create a new deploy artifact for ElasticBeanstalk in `dist` directory.
+* install eb CLI: https://github.com/aws/aws-elastic-beanstalk-cli-setup.
+* open terminal in root dir and run `echo 'export PATH="/home/sardor/.ebcli-virtual-env/executables:$PATH"' >> ~/.bash_profile && source ~/.bash_profile`.
+* run `eb init`.
+* run `eb create --single`.
+* add to default security group new inboud rule, which accepts all traffic from elasticBeanstalk's security group. (The one, that was created with Elastic Beanstalk environment, after previous command).
+* run `publish_db` to add manually integrated parts of database.
+
+Other scripts:
 * `start-dev` - run development server with `nodemon`.
-* `build` - compile back-end and front-end after that save compiled back-end to `build` directory.
 * `start` - run production server.
 * `test` - run all tests in `tests` directories.
 * `watch` - run webpack with watch mode.
