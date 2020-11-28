@@ -7,7 +7,8 @@ $ npm install
 ``` 
 
 ## How to start:
-Run these scripts from `package.json`:
+For now there is no one-scripted command to run, but  in the future we are planning to deploy this application in one click.
+Run these scripts from `package.json` and some other commands:
 * run `cloudformation-deploy` - initialize all cloud infrastructure.
 * `wait!` until CloudFormation stack will be ready.
 * run `generate-config-file` - create connection file with all secret information (ids, passwords and etc).
@@ -16,8 +17,8 @@ Run these scripts from `package.json`:
 * run `package` - create a new deploy artifact for ElasticBeanstalk in `dist` directory.
 * install eb CLI: https://github.com/aws/aws-elastic-beanstalk-cli-setup.
 * open terminal in root dir and run `echo 'export PATH="/home/sardor/.ebcli-virtual-env/executables:$PATH"' >> ~/.bash_profile && source ~/.bash_profile`.
-* run `eb init`.
-* run `eb create --single`.
+* run `eb init`
+* run `eb create --single`
 * `add to default security group a new inboud rule for PostgreSQL` OR add to default security group new inboud rule, which accepts all traffic from elasticBeanstalk's security group. (The one, that was created with Elastic Beanstalk environment, after previous command).
 * run `publish_db` to add manually integrated parts of database.
 
