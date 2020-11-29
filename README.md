@@ -10,7 +10,7 @@ $ npm install
 For now there is no one-scripted command to run, but  in the future we are planning to deploy this application in one click.
 Run these scripts from `package.json` and some other commands:
 * run `cloudformation-deploy` - initialize all cloud infrastructure.
-* `wait!` until CloudFormation stack will be ready.
+* `wait!` until CloudFormation stack is ready.
 * run `generate-config-file` - create connection file with all secret information (ids, passwords and etc).
 * update scripts in ./util/SqlScripts with a new database endpoint.
 * run `build` - build whole project and save it to `build` directory.
