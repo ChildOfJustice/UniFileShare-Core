@@ -260,51 +260,49 @@ class UploadFile extends React.Component<ReduxType, IState> {
                     //     console.log(jsonRes)
                     // }).catch(error => alert("ERROR: " + error))
                     //alert("File uploaded")
+                    const params = {
+                        Bucket: config.AWS.S3.bucketName,
+                        Key: metadata.S3uniqueName,
+                        Body: file,
+                    };
+
+
+                    const canonicalTagArray = [];
+                    for (let i = 0; i < otherTags.length; i++) {
+                        var element2 =  {Key: otherTags[i][0], Value: otherTags[i][1]};
+                        canonicalTagArray.push(element2);
+                    }
+
+                    if(canonicalTagArray.length == 0){
+                        var upload = new AWS.S3.ManagedUpload({
+                            params: params
+                        });
+                    } else{
+                        var upload = new AWS.S3.ManagedUpload({
+                            params: params,
+                            tags: canonicalTagArray
+                        });
+                    }
+
+                    var promise = upload.promise();
+
+                    promise.then(
+                        function(data) {
+                            alert("File uploaded successfully.");
+                            window.close();
+                        },
+                        function(err) {
+                            console.log(err.message);
+                            return alert("There was an error: " + err.message);
+                        }
+                    );
+
                 }).catch(error => alert("ERROR: " + error))
 
 
                 }
             )
 
-            //TODO turn upload on
-            //return;
-
-            const params = {
-                Bucket: config.AWS.S3.bucketName,
-                Key: metadata.S3uniqueName,
-                Body: file,
-            };
-
-
-            const canonicalTagArray = [];
-            for (let i = 0; i < otherTags.length; i++) {
-                var element2 =  {Key: otherTags[i][0], Value: otherTags[i][1]};
-                canonicalTagArray.push(element2);
-            }
-
-            if(canonicalTagArray.length == 0){
-                var upload = new AWS.S3.ManagedUpload({
-                    params: params
-                });
-            } else{
-                var upload = new AWS.S3.ManagedUpload({
-                    params: params,
-                    tags: canonicalTagArray
-                });
-            }
-
-            var promise = upload.promise();
-
-            promise.then(
-                function(data) {
-                    alert("File uploaded successfully.");
-                    window.close();
-                },
-                function(err) {
-                    console.log(err.message);
-                    return alert("There was an error: " + err.message);
-                }
-            );
         }
         // if(itemValue == "Azure"){
         //     alert("This cloud provider is not supported for now")
@@ -409,15 +407,15 @@ class UploadFile extends React.Component<ReduxType, IState> {
                     </tr>
                     <tr>
                         <td><input value="uploadedby" id="defaultTagKey1" type="text" size={40} readOnly/></td>
-                        <td><input value="YourName" id="defaultTagValue1" type="text" size={40}/></td>
+                        <td><input id="defaultTagValue1" type="text" size={40}/></td>
                     </tr>
                     <tr>
                         <td><input value="ownedby" id="defaultTagKey2" type="text" size={40} readOnly/></td>
-                        <td><input value="OwnerName" id="defaultTagValue2" type="text" size={40}/></td>
+                        <td><input id="defaultTagValue2" type="text" size={40}/></td>
                     </tr>
                     <tr>
                         <td><input value="category" id="defaultTagKey3" type="text" size={40} readOnly/></td>
-                        <td><input value="Category" id="defaultTagValue3" type="text" size={40}/></td>
+                        <td><input id="defaultTagValue3" type="text" size={40}/></td>
                     </tr>
 
                     <tr>

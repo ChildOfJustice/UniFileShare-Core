@@ -1,4 +1,4 @@
-# main-app
+# UniFileShare application
 ## How to install:
 1. Clone this repository.
 2. Install all dependencies.
@@ -9,7 +9,7 @@ $ npm install
 ## How to start:
 Run these scripts from `package.json`:
 * run `cloudformation-deploy` - initialize all cloud infrastructure.
-* `wait!` until CloudFormation stack will be ready.
+* `wait!` until CloudFormation stack is ready.
 * run `generate-config-file` - create connection file with all secret information (ids, passwords and etc).
 * update scripts in ./util/SqlScripts with a new database endpoint.
 * run `build` - build whole project and save it to `build` directory.
