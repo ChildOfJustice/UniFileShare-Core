@@ -13,6 +13,9 @@ import * as storeService from '../../store/demo/store.service'
 import {DemoActions} from '../../store/demo/types';
 import config from "../../../util/config";
 import {FetchParams, makeFetch} from "../Interface";
+import {LinkContainer} from "react-router-bootstrap";
+import Navbar from "react-bootstrap/Navbar";
+import {setInterval} from "timers";
 
 const mapStateToProps = ({demo}: IRootState) => {
     const {authToken, idToken, loading} = demo;
@@ -33,95 +36,62 @@ interface IProps {
     history: History
     /* other props for ChildComponent */
 }
-
-type ReduxType = IProps & ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatcherToProps>;
-
 interface IState {
-    smth: string
-
-}
-
-class SignUp extends React.Component<ReduxType, IState> {
-
+    code: string
+    verificationStage: boolean
+    userCognitoId: string
     userName: string
     password: string
     email: string
-    fetchesService: any
+    userNameForDatabase: string
+}
+
+
+type ReduxType = IProps & ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatcherToProps>;
+
+class SignUp extends React.Component<ReduxType, IState> {
+    public state: IState = {
+        code: "",
+        verificationStage: false,
+        userCognitoId: "",
+        userName: "",
+        password: "",
+        email: "",
+        userNameForDatabase: ""
+    }
+
+
+
 
     // Initialize the state
     constructor(props: ReduxType) {
         super(props);
-
-        this.state = {
-            smth: "test state action"
-        }
-
-        this.userName = ""
-        this.email = ""
-        this.password = ""
     }
 
-
-    signUp = (event: any) => {
+    verifyCode = (event: any) => {
         event.preventDefault()
 
-        var userCognitoId: string | null = null
-        //alert(this.userName + " " + this.password + " " + this.email + " test state: " + this.state.smth)
-
         let userData = {
-            username: this.userName,
-            password: this.password,
-            email: this.email,
+            code: this.state.code,
+            username: this.state.userName
         }
 
 
-        const {authToken, idToken, loading} = this.props;
-
         const fetchParams: FetchParams = {
-            url: '/auth/signUp',
+            url: '/auth/verify',
             authToken: "",
             idToken: "",
             method: 'POST',
             body: userData,
 
-            actionDescription: "sign up"
+            actionDescription: "verify email code"
         }
 
         makeFetch<any>(fetchParams).then(jsonRes => {
-            console.log(jsonRes)
-            userCognitoId = jsonRes.data.UserSub
-
-            if (userCognitoId == null) {
-                alert("ERROR WITH COGNITO")
-                return
-            }
-
-            //add to the database
-            const userData2: User = {
-                name: this.userName,
-                roleId: config.AppConfig.RolesIds.user,
-                cognitoUserId: userCognitoId,
-                signUpDate: Date()
-            }
+            console.log("VERIFY RESULT: " + jsonRes)
 
 
-            const {authToken, idToken, loading} = this.props;
-
-            const fetchParams: FetchParams = {
-                url: '/users/create',
-                authToken: authToken,
-                idToken: idToken,
-                method: 'POST',
-                body: userData2,
-
-                actionDescription: "create user"
-            }
-
-            makeFetch<any>(fetchParams).then(jsonRes => {
-                console.log(jsonRes)
-                alert("Successfully signed you up, now ask the Administrator to confirm your account.")
-                this.props.history.push("/")
-            }).catch(error => alert("ERROR: " + error))
+            this.signIn()
 
 
             //add tokens to the store and redirect to the client page
@@ -153,23 +123,198 @@ class SignUp extends React.Component<ReduxType, IState> {
             //
             //     })
             //     .catch(error => alert("Fetch error: " + error))
+
+
+
+
+
+
+            //console.log("JSON res: " + jsonRes.data.AuthenticationResult)
+            // @ts-ignore
+
+
+            // @ts-ignore
+            //this.props.setAuthToken(jsonRes.data.AuthenticationResult.AccessToken)
+            //this.props.setIdToken(jsonRes.data.AuthenticationResult.IdToken)
+            //this.props.saveStore()
+            // @ts-ignore
+            //const {authToken, loading} = this.props;
+
+            //alert("Your access token is: " + authToken)
+            //this.props.history.push("/private/area")
+            // if(res.ok)
+            //     alert("Successfully signed in")
+            // else alert("Error, see logs for more info")
+        }).catch(error => alert("ERROR: " + error))
+
+
+
+        //.catch(error => alert("Fetch error: " + error))
+
+        //browserHistory.push('/home');
+    }
+    signIn = () => {
+
+        let userData = {
+            username: this.state.userName,
+            password: this.state.password,
+        }
+
+
+
+        const fetchParams: FetchParams = {
+            url: '/auth/signIn',
+            authToken: "",
+            idToken: "",
+            method: 'POST',
+            body: userData,
+
+            actionDescription: "sign in after verification"
+        }
+
+        makeFetch<any>(fetchParams).then(jsonRes => {
+            console.log(jsonRes)
+            console.log("JSON res: " + jsonRes.data.AuthenticationResult)
+            // @ts-ignore
+
+
+            // @ts-ignore
+            this.props.setAuthToken(jsonRes.data.AuthenticationResult.AccessToken)
+            this.props.setIdToken(jsonRes.data.AuthenticationResult.IdToken)
+            this.props.saveStore()
+
+
+            //add to the database
+            const userData2: User = {
+                name: this.state.userNameForDatabase,
+                roleId: config.AppConfig.RolesIds.user,
+                cognitoUserId: this.state.userCognitoId,
+                signUpDate: Date()
+            }
+
+            // @ts-ignore
+            const {authToken, idToken} = this.props;
+
+            const fetchParams: FetchParams = {
+                url: '/users/create',
+                authToken: authToken,
+                idToken: idToken,
+                method: 'POST',
+                body: userData2,
+
+                actionDescription: "create user"
+            }
+
+            makeFetch<any>(fetchParams).then(jsonRes => {
+                console.log(jsonRes)
+                alert("Successfully signed you up.")
+                this.props.history.push("/private/area")
+            }).catch(error => alert("ERROR: " + error))
+
+
+            //alert("Your access token is: " + authToken)
+            //this.props.history.push("/private/area")
+            // if(res.ok)
+            //     alert("Successfully signed in")
+            // else alert("Error, see logs for more info")
+        }).catch(error => alert("ERROR: " + error))
+
+
+
+        //.catch(error => alert("Fetch error: " + error))
+
+        //browserHistory.push('/home');
+    }
+
+
+
+    signUp = (event: any) => {
+        event.preventDefault()
+
+        var userCognitoId: string | null = null
+        //alert(this.userName + " " + this.password + " " + this.email + " test state: " + this.state.smth)
+
+        let userData = {
+            username: this.state.userName,
+            password: this.state.password,
+            email: this.state.email,
+        }
+        this.setState({userNameForDatabase: this.state.userName})
+        const fetchParams: FetchParams = {
+            url: '/auth/signUp',
+            authToken: "",
+            idToken: "",
+            method: 'POST',
+            body: userData,
+
+            actionDescription: "Cognito sign up"
+        }
+
+        makeFetch<any>(fetchParams).then(jsonRes => {
+            console.log(jsonRes)
+            userCognitoId = jsonRes.data.UserSub
+
+            if (userCognitoId == null) {
+                alert("ERROR WITH COGNITO")
+                return
+            }
+
+            this.setState({verificationStage: true, userCognitoId: userCognitoId})
+
         }).catch(error => alert("ERROR: " + error))
     }
 
     _onChangeUserName = (e: React.ChangeEvent<HTMLInputElement>) => {
-        this.userName = (e.target as HTMLInputElement).value
-        this.setState({smth: (e.target as HTMLInputElement).value})
+        this.setState({userName: (e.target as HTMLInputElement).value})
     }
     _onChangeEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
-        this.email = (e.target as HTMLInputElement).value
+        this.setState({email: (e.target as HTMLInputElement).value})
     }
     _onChangePassword = (e: React.ChangeEvent<HTMLInputElement>) => {
-        this.password = (e.target as HTMLInputElement).value
+        this.setState({password: (e.target as HTMLInputElement).value})
     }
+
+    _onChangeCode = (e: React.ChangeEvent<HTMLInputElement>) => {
+        this.setState({code: (e.target as HTMLInputElement).value})
+    }
+
+    // @ts-ignore
+    MainPanel = ({ verificationStage }) => (
+        <div className="MainPanel">
+            {verificationStage ?
+                <Form>
+
+                    <Form.Group controlId="formBasicUserName">
+                        <Form.Label>Verification Code</Form.Label>
+                        <Form.Control onChange={this._onChangeCode} type="string" placeholder="Verification Code"/>
+                    </Form.Group>
+
+
+                    <Button onClick={this.verifyCode} variant="primary" type="submit">Sign In</Button>
+                </Form>
+                : <Form>
+                    <Form.Group controlId="formBasicEmail">
+                        <Form.Label>Email address</Form.Label>
+                        <Form.Control onChange={this._onChangeEmail} type="email" placeholder="Enter email"/>
+                    </Form.Group>
+                    <Form.Group controlId="formBasicUserName">
+                        <Form.Label>UserName</Form.Label>
+                        <Form.Control onChange={this._onChangeUserName} type="string" placeholder="Your username"/>
+                    </Form.Group>
+                    <Form.Group controlId="formBasicPassword">
+                        <Form.Label>Password</Form.Label>
+                        <Form.Control onChange={this._onChangePassword} type="password" placeholder="Password"/>
+                    </Form.Group>
+
+                    <Button onClick={this.signUp} variant="primary" type="submit">Sign Up</Button>
+                </Form>}
+        </div>
+    );
+
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     render() {
-        return (
+        const SignUpPart = (
             <Form>
                 <Form.Group controlId="formBasicEmail">
                     <Form.Label>Email address</Form.Label>
@@ -186,6 +331,21 @@ class SignUp extends React.Component<ReduxType, IState> {
 
                 <Button onClick={this.signUp} variant="primary" type="submit">Sign Up</Button>
             </Form>
+        )
+        const verifyPagePart = (
+            <Form>
+
+                <Form.Group controlId="formBasicUserName">
+                    <Form.Label>Verification Code</Form.Label>
+                    <Form.Control onChange={this._onChangeCode} type="string" placeholder="Verification Code"/>
+                </Form.Group>
+
+
+                <Button onClick={this.verifyCode} variant="primary" type="submit">Sign In</Button>
+            </Form>
+        )
+        return (
+            <this.MainPanel verificationStage={this.state.verificationStage}/>
         );
     }
 }
