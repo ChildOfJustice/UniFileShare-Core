@@ -55,7 +55,7 @@ class UsersdbController {
 
         // Create a note
         const note: User = {
-            name: req.body.username,
+            name: req.body.name,
             // someReal: req.body.someReal,
             // signUpDate: req.body.signUpDate
             roleId: req.body.roleId,

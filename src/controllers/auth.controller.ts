@@ -20,7 +20,7 @@ class AuthController {
     private initRoutes() {
         this.router.post('/signUp', this.validateBody('signUp'), this.signUp)
         this.router.post('/signIn', this.validateBody('signIn'), this.signIn)
-        this.router.post('/verify', this.validateBody('verify'), this.verify)
+        this.router.post('/verify', this.verify)//, this.validateBody('verify')
     }
 
 
@@ -102,13 +102,13 @@ class AuthController {
 
     }
     verify(req: Request, res: Response){
-        const result = validationResult(req);
+        //const result = validationResult(req);
         console.log("VERIFY REQUEST: ");
-        console.log(req.body);
+        //console.log(req.body);
 
-        if(!result.isEmpty()){
-            return res.status(422).json({errors: result.array()})
-        }
+        // if(!result.isEmpty()){
+        //     return res.status(422).json({errors: result.array()})
+        // }
 
         const { username, code } = req.body;
         const cognito = new CognitoService();

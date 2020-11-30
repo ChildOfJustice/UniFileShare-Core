@@ -34,7 +34,7 @@ os.remove('./util/GenerateConfigFile/userpool_description.json')
 
 secret_data_dictionary = json.loads(secret_data_json)
 
-result_file = open("./util/config.ts", 'a')
+result_file = open("./util/config.ts", 'w')
 
 output_string = ("export default {\n"
 "    AppConfig: {\n"
@@ -82,9 +82,21 @@ output_string = ("export default {\n"
 "    }\n"
 "}")
 result_file.write(output_string)
+
 # result_file.write(stack_description_dictionary['Stacks'][0]['Outputs'][1]['OutputValue'] + '\n')  
 # result_file.write(stack_description_dictionary['Stacks'][0]['Outputs'][0]['OutputValue'] + '\n')
 # result_file.write(secret_data_dictionary['UserPoolClient']['ClientSecret'] + '\n')  
 # result_file.write(stack_description_dictionary['Stacks'][0]['Outputs'][2]['OutputValue'] + '\n')
 # result_file.write(stack_description_dictionary['Stacks'][0]['Outputs'][3]['OutputValue'] + '\n')  
 result_file.close()
+
+os.remove('./util/SqlScripts/publish.sh')
+publish_database_file = open("./util/SqlScripts/publish.sh", 'a')
+output_string = ("#!/bin/bash\n"
+"export PGPASSWORD=9173cde5f031d32690ef1af6af48216d6623016b2ecbb311cf\n"
+"psql -U postgres -h "+ stack_description_dictionary['Stacks'][0]['Outputs'][4]['OutputValue'] +" -d dflgepe0gp719 -f ./util/SqlScripts/init.sql\n"
+"psql -U postgres -h "+ stack_description_dictionary['Stacks'][0]['Outputs'][4]['OutputValue'] +" -f ./util/SqlScripts/test.sql\n"
+#psql -U fhsqtmbxgitotv -h ec2-107-20-15-85.compute-1.amazonaws.com -d dflgepe0gp719 -f test.sql
+)
+publish_database_file.write(output_string)
+publish_database_file.close()
