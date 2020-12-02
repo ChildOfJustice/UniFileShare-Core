@@ -95,7 +95,7 @@ publish_database_file = open("./util/SqlScripts/publish.sh", 'a')
 output_string = ("#!/bin/bash\n"
 "export PGPASSWORD=9173cde5f031d32690ef1af6af48216d6623016b2ecbb311cf\n"
 "psql -U postgres -h "+ stack_description_dictionary['Stacks'][0]['Outputs'][4]['OutputValue'] +" -d dflgepe0gp719 -f ./util/SqlScripts/init.sql\n"
-"psql -U postgres -h "+ stack_description_dictionary['Stacks'][0]['Outputs'][4]['OutputValue'] +" -f ./util/SqlScripts/test.sql\n"
+"psql -U postgres -h "+ stack_description_dictionary['Stacks'][0]['Outputs'][4]['OutputValue'] +" -d dflgepe0gp719 -f ./util/SqlScripts/test.sql\n"
 #psql -U fhsqtmbxgitotv -h ec2-107-20-15-85.compute-1.amazonaws.com -d dflgepe0gp719 -f test.sql
 )
 publish_database_file.write(output_string)

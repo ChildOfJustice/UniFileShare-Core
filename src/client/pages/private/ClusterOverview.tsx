@@ -424,7 +424,7 @@ class ClusterOverview extends React.Component<ReduxType, IState> {
         <div className="SharePanel">
             {(this.state.permissions[3] == '1') ?
                 <Form.Group controlId="formBasicUserName">
-                    <Form.Label>Share this cluster</Form.Label>
+                    <Form.Label>Share this cluster</Form.Label><br/>
                     <Form.Label>User to share with</Form.Label>
                     <Form.Control onChange={this._onChangeCoUserId} type="string" placeholder="User Id"/>
                     <Form.Label>Permissions for the user</Form.Label>
