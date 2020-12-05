@@ -107,7 +107,7 @@ class CognitoService {
             console.log(error)
             return {
                 success: false,
-                msg: error
+                msg: error.message
             }
         }
     }
