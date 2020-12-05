@@ -65,6 +65,11 @@ class UploadFile extends React.Component<ReduxType, IState> {
 
     async checkStorageSizeLimitation(fileSize: number) {
 
+        if (fileSize >= config.AppConfig.maxUserStorageSize_MB){
+            this.setState({canUpload: false})
+            return
+        }
+
 
         const {authToken, idToken, loading} = this.props;
 

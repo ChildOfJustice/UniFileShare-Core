@@ -284,13 +284,13 @@ class SignUp extends React.Component<ReduxType, IState> {
             {verificationStage ?
                 <Form>
 
-                    <Form.Group controlId="formBasicUserName">
+                    <Form.Group controlId="confirmCode">
                         <Form.Label>Verification Code</Form.Label>
                         <Form.Control onChange={this._onChangeCode} type="string" placeholder="Verification Code"/>
                     </Form.Group>
 
 
-                    <Button onClick={this.verifyCode} variant="primary" type="submit">Sign In</Button>
+                    <Button onClick={this.verifyCode} variant="primary" type="submit">Submit</Button>
                 </Form>
                 : <Form>
                     <Form.Group controlId="formBasicEmail">

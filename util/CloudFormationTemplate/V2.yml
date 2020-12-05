@@ -19,6 +19,12 @@ Resources:
     Properties:
       UserPoolName: TestPool
       MfaConfiguration: 'OFF'
+      AutoVerifiedAttributes:
+        - email
+      EmailConfiguration:
+        EmailSendingAccount: COGNITO_DEFAULT
+      VerificationMessageTemplate:
+        DefaultEmailOption: CONFIRM_WITH_CODE
       Policies:
         PasswordPolicy:
           MinimumLength: 6

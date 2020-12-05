@@ -20,19 +20,34 @@ class AuthController {
     private initRoutes() {
         this.router.post('/signUp', this.validateBody('signUp'), this.signUp)
         this.router.post('/signIn', this.validateBody('signIn'), this.signIn)
-        this.router.post('/verify', this.verify)//, this.validateBody('verify')
+        this.router.post('/verify', this.validateBody('verify'), this.verify)
     }
 
 
 
-
+    logMapElements(value: string, key: string, map:any) {
+        console.log(`m[${key}] = ${value}`);
+    }
     signUp(req: Request, res: Response){
 
         const result = validationResult(req);
         //console.log("SIGN UP REQUEST: ");
         //console.log(req.body);
+        console.log(result.mapped())
+
         if(!result.isEmpty()){
-            return res.status(422).json({errors: result.array()})
+            let responseStr = "\n"
+            const mappedErrors = result.mapped()
+            if(mappedErrors['email'] != null)
+                responseStr += 'Invalid email: must be like "***@**.domain"\n'
+            if(mappedErrors['username'] != null)
+                responseStr += "Invalid username: min size is 4\n"
+            if(mappedErrors['password'] != null)
+                responseStr += "Invalid password: min size is 6\n"
+
+            return res.status(422).send({
+                message: responseStr || "Validation is not successful."
+            });
         }
         console.log("Validation successful!")
 
@@ -80,8 +95,19 @@ class AuthController {
         //console.log("SIGN IN REQUEST: ");
         //console.log(req.body);
 
+        console.log(result.mapped())
+
         if(!result.isEmpty()){
-            return res.status(422).json({errors: result.array()})
+            let responseStr = "\n"
+            const mappedErrors = result.mapped()
+            if(mappedErrors['username'] != null)
+                responseStr += "Invalid username: min size is 4\n"
+            if(mappedErrors['password'] != null)
+                responseStr += "Invalid password: min size is 6\n"
+
+            return res.status(422).send({
+                message: responseStr || "Validation is not successful."
+            });
         }
 
         console.log("Validation successful!")
@@ -102,22 +128,35 @@ class AuthController {
 
     }
     verify(req: Request, res: Response){
-        //const result = validationResult(req);
+        const result = validationResult(req);
         console.log("VERIFY REQUEST: ");
-        //console.log(req.body);
+        console.log(req.body);
 
-        // if(!result.isEmpty()){
-        //     return res.status(422).json({errors: result.array()})
-        // }
+        console.log(result.mapped())
+
+        if(!result.isEmpty()){
+            let responseStr = "\n"
+            const mappedErrors = result.mapped()
+            if(mappedErrors['code'] != null)
+                responseStr += "Invalid code: length must be 6\n"
+            if(mappedErrors['username'] != null)
+                responseStr += "Invalid username: min size is 4\n"
+
+            return res.status(422).send({
+                message: responseStr || "Validation is not successful."
+            });
+        }
 
         const { username, code } = req.body;
         const cognito = new CognitoService();
+
         cognito.verifyAccount(username, code)
+            .catch()
             .then(promiseOutput =>{
                 if(promiseOutput.success){
-                    res.status(200).json({"response": "successfully verified the user"}).end()
+                    res.status(200).json({"data": "successfully verified the user"}).end()
                 } else {
-                    res.status(500).json({"Internal server error": promiseOutput.msg}).end()
+                    res.status(500).send({message: promiseOutput.msg})
                 }
             });
 
