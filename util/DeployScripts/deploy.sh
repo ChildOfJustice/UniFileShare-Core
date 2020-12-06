@@ -3,13 +3,16 @@
 echo "generating config file...";
 sh ./util/GenerateConfigFile/generateConfigScript.sh;
 
+echo "waiting the app to get all configurations...";
+sleep 10;
+
 echo "creating artifact...";
 sh ./util/DeployScripts/dist.sh;
 
 echo "executing elastic beanstalk create command...";
 eb create --single;
 
-echo "waiting app to create the database tables...";
+echo "waiting the app to create the database tables...";
 sleep 10;
 
 echo "publishing rest database infrastructure...";
