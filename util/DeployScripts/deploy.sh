@@ -3,8 +3,8 @@
 echo "generating config file...";
 sh ./util/GenerateConfigFile/generateConfigScript.sh;
 
-echo "waiting the app to get all configurations...";
-sleep 10;
+
+npm run build
 
 echo "creating artifact...";
 sh ./util/DeployScripts/dist.sh;

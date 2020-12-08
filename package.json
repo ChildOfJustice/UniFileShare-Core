@@ -16,7 +16,7 @@
     "package": "sh ./util/DeployScripts/dist.sh",
     "cloudformation-deploy": "sh ./util/DeployScripts/cloudformation_deploy.sh",
     "generate-config-file": "sh ./util/GenerateConfigFile/generateConfigScript.sh",
-    "deploy": "npm run build && sh ./util/DeployScripts/deploy.sh",
+    "deploy": "sh ./util/DeployScripts/deploy.sh",
     "publish_db": "./util/SqlScripts/publish.sh",
     "unpublish_db": "./util/SqlScripts/unpublish.sh",
     "start-dev": "nodemon --config \"./util/nodemon.json\"/",
