@@ -13,9 +13,6 @@ import * as storeService from '../../store/demo/store.service'
 import {DemoActions} from '../../store/demo/types';
 import config from "../../../util/config";
 import {FetchParams, makeFetch} from "../Interface";
-import {LinkContainer} from "react-router-bootstrap";
-import Navbar from "react-bootstrap/Navbar";
-import {setInterval} from "timers";
 
 const mapStateToProps = ({demo}: IRootState) => {
     const {authToken, idToken, loading} = demo;
@@ -93,65 +90,7 @@ class SignUp extends React.Component<ReduxType, IState> {
 
             this.signIn()
 
-
-            //add tokens to the store and redirect to the client page
-            //TODO YOU NEED TO CONFIRM THE USER <----(!) and then you will be able to sign in after sigh up
-            // fetch('/auth/signIn',{
-            //     method: 'POST',
-            //     headers: {
-            //         'Content-Type': 'application/json'
-            //         // 'Content-Type': 'application/x-www-form-urlencoded',
-            //     },
-            //     body: JSON.stringify(userData)
-            // })
-            //     .then(res => res.json()
-            //     )
-            //     .then(data => {
-            //         console.log("JSON res: " + data.data.AuthenticationResult)
-            //         // @ts-ignore
-            //
-            //
-            //         // @ts-ignore
-            //         this.props.setAuthToken(data.data.AuthenticationResult.AccessToken)
-            //         this.props.setIdToken(data.data.AuthenticationResult.IdToken)
-            //         this.props.saveStore()
-            //
-            //         this.props.history.push("/private/area")
-            //         // if(res.ok)
-            //         //     alert("Successfully signed in")
-            //         // else alert("Error, see logs for more info")
-            //
-            //     })
-            //     .catch(error => alert("Fetch error: " + error))
-
-
-
-
-
-
-            //console.log("JSON res: " + jsonRes.data.AuthenticationResult)
-            // @ts-ignore
-
-
-            // @ts-ignore
-            //this.props.setAuthToken(jsonRes.data.AuthenticationResult.AccessToken)
-            //this.props.setIdToken(jsonRes.data.AuthenticationResult.IdToken)
-            //this.props.saveStore()
-            // @ts-ignore
-            //const {authToken, loading} = this.props;
-
-            //alert("Your access token is: " + authToken)
-            //this.props.history.push("/private/area")
-            // if(res.ok)
-            //     alert("Successfully signed in")
-            // else alert("Error, see logs for more info")
         }).catch(error => alert("ERROR: " + error))
-
-
-
-        //.catch(error => alert("Fetch error: " + error))
-
-        //browserHistory.push('/home');
     }
     signIn = () => {
 
@@ -211,19 +150,7 @@ class SignUp extends React.Component<ReduxType, IState> {
                 this.props.history.push("/private/area")
             }).catch(error => alert("ERROR: " + error))
 
-
-            //alert("Your access token is: " + authToken)
-            //this.props.history.push("/private/area")
-            // if(res.ok)
-            //     alert("Successfully signed in")
-            // else alert("Error, see logs for more info")
         }).catch(error => alert("ERROR: " + error))
-
-
-
-        //.catch(error => alert("Fetch error: " + error))
-
-        //browserHistory.push('/home');
     }
 
 
