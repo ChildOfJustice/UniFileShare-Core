@@ -376,28 +376,6 @@ class PersonalPage extends React.Component<ReduxType, IState> {
             console.log(jsonRes)
             this.setState({dbResponse: JSON.stringify(jsonRes[0])})
         }).catch(error => alert("ERROR: " + error))
-
-
-        // fetch('/protected/adminQuery', {
-        //     method: 'POST',
-        //     headers: {
-        //         'Content-Type': 'application/json',
-        //         'Auth': authToken,
-        //         'Identity': idToken
-        //     },
-        //     body: JSON.stringify(data)
-        // })
-        //     .then(res => {
-        //         res.json().then(jsonRes => {
-        //             console.log(jsonRes)
-        //             this.setState({dbResponse: JSON.stringify(jsonRes[0])})
-        //         })
-        //
-        //         if (res.ok)
-        //             console.log("Successfully get all nodes from db")
-        //         else alert("Error, see logs for more info")
-        //     })
-        //     .catch(error => alert("Fetch error: " + error))
     }
 
     _onChangeClusterName = (e: React.ChangeEvent<HTMLInputElement>) => {

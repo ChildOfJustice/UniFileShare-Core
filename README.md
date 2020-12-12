@@ -1,4 +1,4 @@
-# main-app
+# UniFileShare application
 ## How to install:
 1. Clone this repository.
 2. Install all dependencies.
