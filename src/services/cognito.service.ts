@@ -126,10 +126,6 @@ class CognitoService {
         try{
             let data = await this.cognitoIdentity.initiateAuth(params).promise()
             console.log(data)
-            const { authToken, refreshToken, idToken } = data;
-            // console.log("GOT: " + authToken)
-            // console.log("GOT: " + refreshToken)
-            // console.log("GOT: " + idToken)
 
             return {
                 success: true,

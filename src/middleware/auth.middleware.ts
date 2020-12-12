@@ -20,15 +20,6 @@ class AuthMiddleware{
         this.setUp()
     }
 
-    // async getKey(kidId: any) {
-    //     return new Promise(((resolve, reject) => {
-    //         client.getKeys((err: any, keys: any[]) => {
-    //             const key1 = keys.find(k => k.kid === kidId);
-    //             resolve(key1);
-    //         });
-    //     }));
-    // }
-
     public async verifyToken(req: Request, res: Response, next: () => void): Promise<void> {
         const token = req.header('Auth')
         const idToken = req.header('Identity')!
