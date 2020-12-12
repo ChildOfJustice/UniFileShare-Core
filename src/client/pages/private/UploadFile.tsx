@@ -1,7 +1,6 @@
 import Jumbotron from "react-bootstrap/Jumbotron";
 import * as React from "react";
 import * as AWS from "aws-sdk"
-import {File_ClusterSub, FileMetadata} from "../../../interfaces/databaseTables";
 import { v4 as uuidv4 } from 'uuid'
 
 import config from "../../../../util/config";
@@ -65,6 +64,11 @@ class UploadFile extends React.Component<ReduxType, IState> {
 
     async checkStorageSizeLimitation(fileSize: number) {
 
+        if (fileSize >= config.AppConfig.maxUserStorageSize_MB){
+            this.setState({canUpload: false})
+            return
+        }
+
 
         const {authToken, idToken, loading} = this.props;
 
@@ -107,8 +111,11 @@ class UploadFile extends React.Component<ReduxType, IState> {
                 this.setState({canUpload: true})
             }
             else {
+                //alert("SIZE IS: " + (fileSize + jsonRes[0].usedStorageSize))
                 if(fileSize + jsonRes[0].usedStorageSize < config.AppConfig.maxUserStorageSize_MB)
                     this.setState({canUpload: true})
+                else
+                    this.setState({canUpload: false})
             }
         }).catch(error => alert("ERROR: " + error))
     }
@@ -165,8 +172,6 @@ class UploadFile extends React.Component<ReduxType, IState> {
         otherTags.sort( compare );
 
 
-
-
         if(itemValue == "AWS"){
 
 
@@ -174,13 +179,6 @@ class UploadFile extends React.Component<ReduxType, IState> {
             AWS.config.credentials = new AWS.CognitoIdentityCredentials({
                 IdentityPoolId: config.AWS.IdentityPool.IdentityPoolId,
             });
-
-            // AWS.config.update({
-            //     region: config.AWS.S3.bucketRegion,
-            //     credentials: new AWS.CognitoIdentityCredentials({
-            //         IdentityPoolId: config.AWS.IdentityPool.IdentityPoolId
-            //     })
-            // });
 
             var s3 = new AWS.S3({
                 apiVersion: '2006-03-01',
@@ -234,77 +232,49 @@ class UploadFile extends React.Component<ReduxType, IState> {
                 }
 
                 makeFetch<any>(fetchParams).then(fileInfo => {
-                    // console.log(fileInfo)
-                    // //Bound file to cluster in SUB table
-                    //
-                    // const file_cluster: File_ClusterSub = {
-                    //     fileId: fileInfo.id,
-                    //     // @ts-ignore
-                    //     clusterId: this.props.match.params.clusterId
-                    // };
-                    //
-                    //
-                    // const {authToken, idToken, loading} = this.props;
-                    //
-                    // const fetchParams: FetchParams = {
-                    //     url: '/file_cluster/create',
-                    //     authToken: authToken,
-                    //     idToken: idToken,
-                    //     method: 'POST',
-                    //     body: file_cluster,
-                    //
-                    //     actionDescription: "create file-cluster sub"
-                    // }
-                    //
-                    // makeFetch<any>(fetchParams).then(jsonRes => {
-                    //     console.log(jsonRes)
-                    // }).catch(error => alert("ERROR: " + error))
-                    //alert("File uploaded")
+                    const params = {
+                        Bucket: config.AWS.S3.bucketName,
+                        Key: metadata.S3uniqueName,
+                        Body: file,
+                    };
+
+
+                    const canonicalTagArray = [];
+                    for (let i = 0; i < otherTags.length; i++) {
+                        var element2 =  {Key: otherTags[i][0], Value: otherTags[i][1]};
+                        canonicalTagArray.push(element2);
+                    }
+
+                    if(canonicalTagArray.length == 0){
+                        var upload = new AWS.S3.ManagedUpload({
+                            params: params
+                        });
+                    } else{
+                        var upload = new AWS.S3.ManagedUpload({
+                            params: params,
+                            tags: canonicalTagArray
+                        });
+                    }
+
+                    var promise = upload.promise();
+
+                    promise.then(
+                        function(data) {
+                            alert("File uploaded successfully.");
+                            window.close();
+                        },
+                        function(err) {
+                            console.log(err.message);
+                            return alert("There was an error: " + err.message);
+                        }
+                    );
+
                 }).catch(error => alert("ERROR: " + error))
 
 
                 }
             )
 
-            //TODO turn upload on
-            //return;
-
-            const params = {
-                Bucket: config.AWS.S3.bucketName,
-                Key: metadata.S3uniqueName,
-                Body: file,
-            };
-
-
-            const canonicalTagArray = [];
-            for (let i = 0; i < otherTags.length; i++) {
-                var element2 =  {Key: otherTags[i][0], Value: otherTags[i][1]};
-                canonicalTagArray.push(element2);
-            }
-
-            if(canonicalTagArray.length == 0){
-                var upload = new AWS.S3.ManagedUpload({
-                    params: params
-                });
-            } else{
-                var upload = new AWS.S3.ManagedUpload({
-                    params: params,
-                    tags: canonicalTagArray
-                });
-            }
-
-            var promise = upload.promise();
-
-            promise.then(
-                function(data) {
-                    alert("File uploaded successfully.");
-                    window.close();
-                },
-                function(err) {
-                    console.log(err.message);
-                    return alert("There was an error: " + err.message);
-                }
-            );
         }
         // if(itemValue == "Azure"){
         //     alert("This cloud provider is not supported for now")
@@ -409,15 +379,15 @@ class UploadFile extends React.Component<ReduxType, IState> {
                     </tr>
                     <tr>
                         <td><input value="uploadedby" id="defaultTagKey1" type="text" size={40} readOnly/></td>
-                        <td><input value="YourName" id="defaultTagValue1" type="text" size={40}/></td>
+                        <td><input id="defaultTagValue1" type="text" size={40}/></td>
                     </tr>
                     <tr>
                         <td><input value="ownedby" id="defaultTagKey2" type="text" size={40} readOnly/></td>
-                        <td><input value="OwnerName" id="defaultTagValue2" type="text" size={40}/></td>
+                        <td><input id="defaultTagValue2" type="text" size={40}/></td>
                     </tr>
                     <tr>
                         <td><input value="category" id="defaultTagKey3" type="text" size={40} readOnly/></td>
-                        <td><input value="Category" id="defaultTagValue3" type="text" size={40}/></td>
+                        <td><input id="defaultTagValue3" type="text" size={40}/></td>
                     </tr>
 
                     <tr>

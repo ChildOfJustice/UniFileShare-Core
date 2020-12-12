@@ -1,1 +1,1 @@
-cat ./util/GenerateConfigFile/StackName.info | xargs -I {} aws cloudformation create-stack --stack-name TestStack --template-body file://util/CloudFormationTemplate/V3.yml --capabilities CAPABILITY_NAMED_IAM
+cat ./util/GenerateConfigFile/StackName.info | xargs -I {} aws cloudformation create-stack --stack-name TestStack --template-body file://util/CloudFormationTemplate/V4.yml --capabilities CAPABILITY_NAMED_IAM
