@@ -9,7 +9,6 @@ $ npm install
 3. Install eb (Elastic Beanstalk) CLI: https://github.com/aws/aws-elastic-beanstalk-cli-setup.
 4. Configure your AWS CLI
 
-
 ## Deploy (To a new Elastic Beanstalk Environment):
 Run these scripts from `package.json`:
 * run `cloudformation-deploy` - initialize all cloud infrastructure.
