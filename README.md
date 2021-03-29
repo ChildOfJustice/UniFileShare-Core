@@ -24,20 +24,19 @@ Other scripts:
 
 ## Project description
 
-_Each user will have access to the following list of actions after registration:_
 * **Create a new cluster** (it is like a folder for this application).
 * **Upload a file** to the chosen cloud and:
-  * With possibility to add **user tags**, which can be used in future for quick search. (For example, Amazon Athena with tagged files in the S3 bucket).
-  * **All file metadata will be stored in the RDS database** (in this case it is PostreSQL), therefore it can be queried for any needs, for instance if you want to know information relating to the file (size, name), or when and who uploaded it, also, you can get the user tags for any file without requesting it from S3 bucket.
-  * The file itself will be uploaded to S3 bucket and renamed with a unique name and unique path.
-* Any **cluster can be shared with another user**, and the owner of cluster can decide, which permissions other user will have. (You can choose whether this user can upload, download, delete or give others any permissions to use your cluster).
+  * With the possibility to add **user tags**, which can be used in the future for quick search. (For example, Amazon Athena with tagged files in the S3 bucket).
+  * **All file metadata will be stored in the RDS database** (in this case it is PostgreSQL), therefore it can be queried for any needs, for instance, if you want to know information relating to the file (size, name), or when and who uploaded it, also, you can get the user tags for any file without requesting it from S3 bucket.
+  * The file itself will be uploaded to the S3 bucket and renamed with a unique name and unique path.
+* Any **cluster can be shared with another user**, and the owner of the cluster can decide, which permissions other users will have. (You can choose whether this user can upload, download, delete or give others any permissions to use your cluster).
 
 
 
-**_Additional information_**:
-1. You can adjust available storage size for each user in application configuration file.
-2. Microsoft Azure cloud can be added in the future as a destination option for the file uploading.
-3. There is a script for automated application deployment to AWS Elastic Beanstalk. All cloud infrastructure will be added as a new Stack in AWS CloudFormation with a corresponding CloudFormation template, we are using Infrastructure as code method for the future maintenance.
+**Additional information**:
+* You can adjust available storage size for each user in the application configuration file.
+* Microsoft Azure cloud can be added in the future as a destination option for file uploading.
+* There is a script for automated application deployment to AWS Elastic Beanstalk. All cloud infrastructure will be added as a new Stack in AWS CloudFormation with a corresponding CloudFormation template, we are using Infrastructure as code method for future maintenance.
 
 
 
